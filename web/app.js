@@ -277,15 +277,25 @@ function renderSources(sources) {
     </tr>`).join("");
 }
 
+/* ── 파이프라인 상태 ────────────────────── */
+function renderPipeline(p) {
+  $("#pipeline-body").innerHTML = p.components.map((c) => `
+    <tr>
+      <td><b>${c.name}</b></td>
+      <td><span class="mode-chip">${c.mode}</span></td>
+    </tr>`).join("");
+}
+
 /* ── 초기 로드 ──────────────────────────── */
 async function loadAll() {
-  const [stats, cohorts, signals, sources] = await Promise.all([
-    api("/stats"), api("/cohorts"), api("/signals"), api("/sources"),
+  const [stats, cohorts, signals, sources, pipeline] = await Promise.all([
+    api("/stats"), api("/cohorts"), api("/signals"), api("/sources"), api("/pipeline"),
   ]);
   renderKpis(stats);
   renderSparkline(stats.signal_trend);
   renderCohorts(cohorts);
   renderFeed(signals);
   renderSources(sources);
+  renderPipeline(pipeline);
 }
 loadAll();

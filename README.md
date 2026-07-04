@@ -16,6 +16,27 @@ uvicorn app.main:app --reload
 # → http://localhost:8000
 ```
 
+### 실시간 연동 (선택)
+
+API 키를 환경변수로 넣으면 해당 컴포넌트가 데모 시드에서 실시간 연동으로 전환됩니다.
+키가 없으면 전부 데모 모드로 동작하므로 아무 설정 없이도 실행됩니다.
+
+| 환경변수 | 전환되는 컴포넌트 | 발급처 |
+|---|---|---|
+| `DART_API_KEY` | 전자공시 수집 (OpenDART 공시검색) | [opendart.fss.or.kr](https://opendart.fss.or.kr) — 무료 즉시 발급 |
+| `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | 뉴스 수집 (네이버 검색 API) | [developers.naver.com](https://developers.naver.com) |
+| `ANTHROPIC_API_KEY` | LLM 구조화 추출 (미설정 시 규칙 기반 폴백) | [platform.claude.com](https://platform.claude.com) |
+| `WONGO_LLM_MODEL` | 추출 모델 변경 (기본 `claude-opus-4-8`) | — |
+| `WONGO_LOOKBACK_DAYS` | 라이브 수집 조회 기간 (기본 30일) | — |
+
+```bash
+export DART_API_KEY=...
+export NAVER_CLIENT_ID=... NAVER_CLIENT_SECRET=...
+export ANTHROPIC_API_KEY=...
+uvicorn app.main:app
+# 재수집: curl -X POST localhost:8000/api/refresh
+```
+
 ## 파이프라인
 
 ```
@@ -26,15 +47,23 @@ uvicorn app.main:app --reload
 └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
 ```
 
-**① 수집** — 소스별 커넥터가 동일 인터페이스(`fetch()`)로 신호를 수집합니다.
-현재는 데모 모드(가상 시드 데이터)이며, 실전 연동 대상은 `app/engine/ingest.py`에
-소스별로 명시되어 있습니다: OpenDART, 공정위 의결서, 금감원 제재/분조위, KISCON
-행정처분, 소비자24 리콜 API, 개인정보위 처분, 판결서 인터넷열람, 뉴스 API(빅카인즈),
-국민신문고/커뮤니티.
+**① 수집** — 소스별 커넥터가 동일 인터페이스로 신호를 수집합니다.
+**OpenDART(전자공시 검색)와 네이버 뉴스 검색 API는 실연동 구현이 완료**되어 키만
+넣으면 라이브로 동작합니다 (`app/engine/ingest.py`의 `DartConnector`,
+`NaverNewsConnector`). 나머지 소스(공정위 의결서, 금감원 제재/분조위, KISCON
+행정처분, 소비자24 리콜 API, 개인정보위 처분, 판결서 열람, 국민신문고/커뮤니티)는
+데모 모드이며 연동 대상 채널이 코드에 명시되어 있습니다.
 
-**② 클러스터링** — 신호를 '동일 피고 + 동일 원인'으로 묶어 코호트를 만듭니다.
-실서비스에서는 LLM으로 (책임주체·행위·피해유형·근거법령)을 구조화 추출하고,
-법인 동일성 해소 후 임베딩 유사도로 동일 원인 여부를 판단합니다.
+**①.5 구조화 추출** — 라이브로 수집된 원시 이벤트(공시 제목, 기사 본문)를
+LLM(Claude, 구조화 출력)이 (잠재 피고 · 원인 요약 · 사건 유형 · 중대성 ·
+증거강도 · 피해규모 · **동일 원인 시그니처 cause_key**)로 변환합니다
+(`app/engine/extract.py`). 관련성 없는 이벤트(실적공시, 광고 기사)는 이 단계에서
+걸러집니다. `ANTHROPIC_API_KEY`가 없으면 키워드 규칙 기반 폴백으로 동작합니다.
+
+**② 클러스터링** — 신호를 cause_key 기준 '동일 피고 + 동일 원인'으로 묶어
+코호트를 만듭니다. 변호사가 검토한 메타(시드 6건)가 없는 신규 클러스터는
+LLM이 법률 검토 **초안**(법적 근거 후보, 시효 유의점, 규모 추정)을 자동 생성해
+"자동 초안 — 변호사 검토 대기" 상태로 대시보드에 올립니다.
 → *같은 시공사·같은 자재 대체 피해를 본 다른 발주처를 자동으로 묶으면 단건이 집단사건이 되는 지점.*
 
 **③ 스코어링** — 수임 우선순위 점수:

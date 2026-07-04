@@ -49,6 +49,8 @@ def score_cohort(c: Cohort) -> None:
     }
     c.score = evidence + scale + cohesion + urgency + solvency
 
+    if c.status.startswith("자동 초안"):
+        return  # 미검토 클러스터는 변호사 검토 전까지 상태를 유지한다
     if c.score >= 75:
         c.status = "즉시 검토 권고"
     elif c.score >= 55:

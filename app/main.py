@@ -1,9 +1,14 @@
 """원고레이더 (Plaintiff Radar) — 잠재 원고 발굴 엔진 API 서버.
 
 실행:  uvicorn app.main:app --reload
+
+파이프라인: 수집(ingest) → 구조화 추출(extract) → 클러스터링(cluster) → 스코어링(scoring)
+API 키(DART_API_KEY, NAVER_CLIENT_ID/SECRET, ANTHROPIC_API_KEY)가 있으면 해당
+컴포넌트가 라이브 모드로 동작하고, 없으면 데모 시드로 폴백한다.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from collections import Counter
 from datetime import date, timedelta
@@ -13,29 +18,48 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from . import config
 from .engine.cluster import build_cohorts
+from .engine.extract import get_extractor
 from .engine.ingest import ALL_CONNECTORS, ingest_all
 from .engine.scoring import score_all
 
-app = FastAPI(title="원고레이더 — 잠재 원고 발굴 엔진", version="0.1.0")
+logging.basicConfig(level=logging.INFO)
+app = FastAPI(title="원고레이더 — 잠재 원고 발굴 엔진", version="0.2.0")
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
-# ── 엔진 파이프라인: 수집 → 클러스터링 → 스코어링 ──────────────────────────
-SIGNALS = ingest_all()
-COHORTS = score_all(build_cohorts(SIGNALS))
+# ── 엔진 상태 ────────────────────────────────────────────────────────────
+SIGNALS: list = []
+COHORTS: list = []
+EXTRACTOR = get_extractor()
 CAMPAIGNS: dict[str, dict] = {}
+LAST_RUN: str = ""
+
+
+def run_pipeline() -> None:
+    """수집 → 추출 → 클러스터링 → 스코어링 전체 파이프라인 실행."""
+    global SIGNALS, COHORTS, LAST_RUN
+    seeded, raw_events = ingest_all()
+    extracted = EXTRACTOR.extract(raw_events) if raw_events else []
+    SIGNALS = seeded + extracted
+    COHORTS = score_all(build_cohorts(SIGNALS, extractor=EXTRACTOR))
+    LAST_RUN = date.today().isoformat()
+
+
+run_pipeline()
 
 
 @app.get("/api/stats")
 def stats():
     today = date.today()
     week_ago = (today - timedelta(days=7)).isoformat()
-    trend: list[dict] = []
     counts = Counter(s.date for s in SIGNALS)
-    for d in range(29, -1, -1):
-        day = (today - timedelta(days=d)).isoformat()
-        trend.append({"date": day, "count": counts.get(day, 0)})
+    trend = [
+        {"date": (today - timedelta(days=d)).isoformat(),
+         "count": counts.get((today - timedelta(days=d)).isoformat(), 0)}
+        for d in range(29, -1, -1)
+    ]
     return {
         "sources_active": len(ALL_CONNECTORS),
         "signals_total": len(SIGNALS),
@@ -46,6 +70,31 @@ def stats():
         "est_total_victims": sum(c.est_victims for c in COHORTS),
         "signal_trend": trend,
     }
+
+
+@app.get("/api/pipeline")
+def pipeline():
+    """파이프라인 컴포넌트별 동작 모드."""
+    return {
+        "last_run": LAST_RUN,
+        "components": [
+            {"name": "수집 — 전자공시 (OpenDART)",
+             "mode": "실시간 연동" if config.dart_live() else "데모 (DART_API_KEY 미설정)"},
+            {"name": "수집 — 뉴스 (네이버 검색 API)",
+             "mode": "실시간 연동" if config.naver_live() else "데모 (NAVER_CLIENT_ID/SECRET 미설정)"},
+            {"name": "수집 — 기타 7개 소스",
+             "mode": "데모 (커넥터별 실전 연동 예정)"},
+            {"name": "구조화 추출", "mode": EXTRACTOR.mode},
+            {"name": "클러스터링 + 스코어링", "mode": "엔진 내장"},
+        ],
+    }
+
+
+@app.post("/api/refresh")
+def refresh():
+    """파이프라인 재실행 — 라이브 소스 재수집."""
+    run_pipeline()
+    return {"ok": True, "signals": len(SIGNALS), "cohorts": len(COHORTS)}
 
 
 @app.get("/api/cohorts")

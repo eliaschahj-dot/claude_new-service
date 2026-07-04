@@ -24,6 +24,17 @@ SOURCES = {
 
 
 @dataclass
+class RawEvent:
+    """커넥터가 수집한 가공 전 이벤트 — 추출 단계(extract)를 거쳐 Signal이 된다."""
+    source: str                 # SOURCES 키
+    date: str                   # YYYY-MM-DD
+    title: str
+    body: str = ""              # 요약/본문 (있는 만큼)
+    url: str = ""
+    org_hint: str = ""          # 소스가 이미 아는 회사명 (DART corp_name 등)
+
+
+@dataclass
 class Signal:
     id: str
     source: str                 # SOURCES 키

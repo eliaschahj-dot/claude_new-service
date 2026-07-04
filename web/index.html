@@ -68,7 +68,14 @@
     <section class="view" id="view-sources">
       <div class="page-head">
         <h1>데이터 소스</h1>
-        <p>상시 감시 중인 공개 데이터 채널 — 실서비스에서는 소스별 API/크롤러가 주기적으로 폴링합니다</p>
+        <p>상시 감시 중인 공개 데이터 채널 — API 키를 설정하면 소스별로 실시간 연동으로 전환됩니다</p>
+      </div>
+      <div class="card">
+        <h2>파이프라인 상태</h2>
+        <div class="card-sub">수집 → 구조화 추출(LLM) → 클러스터링 → 스코어링</div>
+        <table class="sources">
+          <tbody id="pipeline-body"></tbody>
+        </table>
       </div>
       <div class="card">
         <table class="sources">
