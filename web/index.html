@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원고레이더 — 잠재 원고 발굴 엔진</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%233987e5' stroke-width='8'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%233987e5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div>
+        <div class="mark">원고<em>레이더</em></div>
+        <div class="sub">Plaintiff Discovery Engine</div>
+      </div>
+    </div>
+    <button class="nav-item active" data-view="dashboard"><span class="ico">◎</span> 대시보드</button>
+    <button class="nav-item" data-view="feed"><span class="ico">⚡</span> 신호 피드</button>
+    <button class="nav-item" data-view="sources"><span class="ico">⛁</span> 데이터 소스</button>
+    <div class="spacer"></div>
+    <div class="disclaimer">
+      데모 데이터의 모든 기업명·사건은 가상입니다.<br>
+      코호트 정보는 수임 검토용 내부 자료이며, 대외 안내물은
+      변호사 광고규정 심사를 거쳐야 합니다.
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- 대시보드 -->
+    <section class="view active" id="view-dashboard">
+      <div class="page-head">
+        <h1>대시보드</h1>
+        <p>공개 데이터 상시 스캔 → 청구권 미행사 피해자 코호트 자동 발굴 · 우선순위 산정</p>
+      </div>
+
+      <div class="kpi-row" id="kpi-row"></div>
+
+      <div class="card">
+        <h2>신호 수집 추이 — 최근 30일</h2>
+        <div class="card-sub">전 소스에서 수집된 일별 신호 건수</div>
+        <div class="spark-wrap">
+          <svg id="sparkline" preserveAspectRatio="none"></svg>
+          <div class="spark-tip" id="spark-tip"></div>
+        </div>
+      </div>
+
+      <div class="card" style="background:none;border:none;padding:0;">
+        <h2 style="margin-bottom:2px;">발굴된 코호트 <span id="cohort-count" style="color:var(--ink-muted);font-weight:500;"></span></h2>
+        <div class="card-sub">수임 우선순위 점수 순 · 클릭하면 근거 신호와 법률 검토 요지를 확인합니다</div>
+        <div class="cohort-list" id="cohort-list"></div>
+      </div>
+    </section>
+
+    <!-- 신호 피드 -->
+    <section class="view" id="view-feed">
+      <div class="page-head">
+        <h1>신호 피드</h1>
+        <p>수집된 원시 신호 — 클러스터링 엔진이 코호트로 묶기 전의 이벤트 스트림</p>
+      </div>
+      <div id="feed-list"></div>
+    </section>
+
+    <!-- 데이터 소스 -->
+    <section class="view" id="view-sources">
+      <div class="page-head">
+        <h1>데이터 소스</h1>
+        <p>상시 감시 중인 공개 데이터 채널 — 실서비스에서는 소스별 API/크롤러가 주기적으로 폴링합니다</p>
+      </div>
+      <div class="card">
+        <table class="sources">
+          <thead><tr><th>소스</th><th>제공 기관</th><th>수집 주기</th><th>상태</th></tr></thead>
+          <tbody id="sources-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 코호트 상세 패널 -->
+<div class="overlay" id="overlay"></div>
+<aside class="detail" id="detail-panel"></aside>
+
+<!-- 캠페인 모달 -->
+<div class="modal" id="campaign-modal"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
