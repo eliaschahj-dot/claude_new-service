@@ -166,9 +166,13 @@ async function openDetail(id) {
   const timeline = c.signals.map((s) => `
     <div class="tl-item ${s.evidence_weight >= 10 ? "w-heavy" : ""}">
       <div class="tl-date">${s.date}</div>
-      <div class="tl-title">${s.title}</div>
+      <div class="tl-title">${s.url
+        ? `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`
+        : s.title}</div>
       <div class="tl-summary">${s.summary}</div>
-      <span class="tl-src">${s.source_label} · ${s.source_org}</span>
+      <span class="tl-src">${s.source_label} · ${s.source_org}${s.url
+        ? ` · <a class="tl-link" href="${s.url}" target="_blank" rel="noopener">원문 확인 ↗</a>`
+        : ""}</span>
     </div>`).join("");
 
   $("#detail-panel").innerHTML = `
@@ -255,7 +259,9 @@ function renderFeed(signals) {
     <div class="feed-item">
       <span class="f-dot" style="background:${CAT_COLORS[s.category] || "#898781"}"></span>
       <div>
-        <div class="f-title">${s.title}</div>
+        <div class="f-title">${s.url
+          ? `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`
+          : s.title}</div>
         <div class="f-summary">${s.summary}</div>
         <div class="f-meta">
           <span>${s.date}</span>

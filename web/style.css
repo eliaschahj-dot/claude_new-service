@@ -219,12 +219,16 @@ body {
 .tl-item.w-heavy::before { background: var(--status-serious); }
 .tl-date { font-size: 11px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .tl-title { font-size: 13px; font-weight: 600; margin: 2px 0 3px; }
+.tl-title a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--ink-muted); }
+.tl-title a:hover { color: var(--blue); border-bottom-color: var(--blue); }
 .tl-summary { font-size: 12px; color: var(--ink-2); line-height: 1.6; }
 .tl-src {
   font-size: 10.5px; color: var(--ink-muted); background: var(--surface-2);
   border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px;
   display: inline-block; margin-top: 5px;
 }
+.tl-src .tl-link { color: var(--blue); text-decoration: none; }
+.tl-src .tl-link:hover { text-decoration: underline; }
 
 /* 버튼 */
 .btn {
@@ -264,6 +268,8 @@ body {
 }
 .feed-item .f-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
 .feed-item .f-title { font-size: 13.5px; font-weight: 600; }
+.feed-item .f-title a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--ink-muted); }
+.feed-item .f-title a:hover { color: var(--blue); border-bottom-color: var(--blue); }
 .feed-item .f-summary { font-size: 12px; color: var(--ink-2); margin-top: 3px; line-height: 1.6; }
 .feed-item .f-meta { font-size: 11px; color: var(--ink-muted); margin-top: 6px; display: flex; gap: 12px; }
 
@@ -284,5 +290,22 @@ table.sources td.num { font-variant-numeric: tabular-nums; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .cohort-card { grid-template-columns: 1fr; }
   .score-block { text-align: left; }
-  .sidebar { display: none; }
+  /* 사이드바를 숨기는 대신 상단 고정 가로 탭 바로 전환 — 모바일에서도 탭 이동 가능 */
+  .layout { flex-direction: column; }
+  .sidebar {
+    flex-direction: row; align-items: center; gap: 2px;
+    width: auto; height: auto; padding: 8px 10px;
+    border-right: none; border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .sidebar .logo { padding: 0 10px 0 4px; flex-shrink: 0; }
+  .sidebar .logo .mark { font-size: 15px; }
+  .sidebar .logo .sub, .sidebar .disclaimer, .sidebar .spacer { display: none; }
+  .sidebar .nav-item {
+    white-space: nowrap; flex-shrink: 0; width: auto;
+    padding: 7px 9px; font-size: 12.5px; gap: 6px;
+  }
+  .sidebar .nav-item .ico { width: auto; }
+  .main { padding: 20px 16px 40px; }
 }

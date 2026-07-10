@@ -82,6 +82,16 @@ class DartConnector(BaseConnector):
     poll_interval_min = 10
     API_URL = "https://opendart.fss.or.kr/api/list.json"
 
+    # 잠재 소송 신호가 몰리는 공시 유형만 조회해 요청 수를 억제하면서 조회 기간
+    # 전체를 커버한다. 전체(무필터)는 30일에 1만 7천 건(170+페이지)이라 최신
+    # 수백 건에서 잘리지만, 유형 필터를 걸면 합계 ~70페이지로 전 기간 순회 가능.
+    #   B 주요사항보고 (소송등의제기, 영업정지, 회생신청 등)
+    #   I 거래소공시   (소송판결·거래정지·시장조치 등)
+    #   F 외부감사관련 (감사의견 거절·한정 등)
+    #   E 기타공시     (행정처분·과징금 등)
+    PBLNTF_TYPES = ("B", "I", "F", "E")
+    MAX_PAGES_PER_TYPE = 50  # 유형별 안전장치 (100건/페이지)
+
     @property
     def live(self) -> bool:
         return config.dart_live()
@@ -92,40 +102,48 @@ class DartConnector(BaseConnector):
         end = date.today()
         begin = end - timedelta(days=config.INGEST_LOOKBACK_DAYS)
         events: list[RawEvent] = []
+        seen_rcept: set[str] = set()
         try:
             with httpx.Client(timeout=20) as client:
-                page, total_pages = 1, 1
-                while page <= min(total_pages, 5):  # 최대 5페이지(500건) 안전장치
-                    r = client.get(self.API_URL, params={
-                        "crtfc_key": config.DART_API_KEY,
-                        "bgn_de": begin.strftime("%Y%m%d"),
-                        "end_de": end.strftime("%Y%m%d"),
-                        "page_no": page,
-                        "page_count": 100,
-                    })
-                    r.raise_for_status()
-                    data = r.json()
-                    if data.get("status") != "000":
-                        log.warning("DART API 오류: %s %s", data.get("status"), data.get("message"))
-                        break
-                    total_pages = int(data.get("total_page", 1))
-                    for item in data.get("list", []):
-                        report = item.get("report_nm", "")
-                        if not any(k in report for k in DART_KEYWORDS):
-                            continue
-                        rcept_no = item.get("rcept_no", "")
-                        rcept_dt = item.get("rcept_dt", "")
-                        events.append(RawEvent(
-                            source="dart",
-                            date=f"{rcept_dt[:4]}-{rcept_dt[4:6]}-{rcept_dt[6:]}" if len(rcept_dt) == 8 else rcept_dt,
-                            title=f"{item.get('corp_name', '')} — {report}",
-                            body=f"공시 제출인: {item.get('flr_nm', '')} / 법인구분: {item.get('corp_cls', '')}",
-                            url=f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcept_no}",
-                            org_hint=item.get("corp_name", ""),
-                        ))
-                    page += 1
+                for pblntf_ty in self.PBLNTF_TYPES:
+                    page, total_pages = 1, 1
+                    while page <= min(total_pages, self.MAX_PAGES_PER_TYPE):
+                        r = client.get(self.API_URL, params={
+                            "crtfc_key": config.DART_API_KEY,
+                            "bgn_de": begin.strftime("%Y%m%d"),
+                            "end_de": end.strftime("%Y%m%d"),
+                            "pblntf_ty": pblntf_ty,
+                            "page_no": page,
+                            "page_count": 100,
+                        })
+                        r.raise_for_status()
+                        data = r.json()
+                        if data.get("status") != "000":
+                            log.warning("DART API 오류(%s): %s %s",
+                                        pblntf_ty, data.get("status"), data.get("message"))
+                            break
+                        total_pages = int(data.get("total_page", 1))
+                        for item in data.get("list", []):
+                            report = item.get("report_nm", "")
+                            rcept_no = item.get("rcept_no", "")
+                            if rcept_no in seen_rcept:
+                                continue
+                            if not any(k in report for k in DART_KEYWORDS):
+                                continue
+                            seen_rcept.add(rcept_no)
+                            rcept_dt = item.get("rcept_dt", "")
+                            events.append(RawEvent(
+                                source="dart",
+                                date=f"{rcept_dt[:4]}-{rcept_dt[4:6]}-{rcept_dt[6:]}" if len(rcept_dt) == 8 else rcept_dt,
+                                title=f"{item.get('corp_name', '')} — {report}",
+                                body=f"공시 제출인: {item.get('flr_nm', '')} / 법인구분: {item.get('corp_cls', '')}",
+                                url=f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcept_no}",
+                                org_hint=item.get("corp_name", ""),
+                            ))
+                        page += 1
         except httpx.HTTPError as e:
             log.warning("DART 수집 실패: %s", e)
+        log.info("DART 수집: 유형 %s에서 신호 후보 %d건", "/".join(self.PBLNTF_TYPES), len(events))
         return events
 
 

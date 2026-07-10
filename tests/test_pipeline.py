@@ -12,8 +12,13 @@ from app.engine.scoring import score_all
 from app.models import RawEvent
 
 
-def test_demo_pipeline():
+def test_demo_pipeline(monkeypatch):
     """키 없는 환경: 시드 신호만으로 6개 코호트가 스코어링된다."""
+    # 실행 환경에 실키가 있어도 테스트는 항상 데모 모드로 — 네트워크 비의존
+    from app import config
+    monkeypatch.setattr(config, "DART_API_KEY", "")
+    monkeypatch.setattr(config, "NAVER_CLIENT_ID", "")
+    monkeypatch.setattr(config, "NAVER_CLIENT_SECRET", "")
     seeded, raw = ingest_all()
     assert len(seeded) == 20
     assert raw == []  # 키가 없으면 라이브 수집 없음
