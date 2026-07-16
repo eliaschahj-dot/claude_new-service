@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Visa Assist — AI 상담</title>
+<title>K-Visa Assist — AI Chat</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,30 +11,30 @@
 
   <header class="appbar">
     <a class="back" href="index.html">‹</a>
-    <span class="title">AI 비자 상담</span>
-    <button class="lang">🌐 EN ▾</button>
+    <span class="title" data-i18n="chatTitle"></span>
+    <button class="lang">🌐</button>
   </header>
 
   <main class="chat-main" id="chatLog">
-    <p class="disclaimer">AI 상담은 하이코리아 공개 정보를 기반으로 한 참고용 안내입니다.
-    최종 검토는 담당 변호사·행정사가 진행합니다.</p>
+    <p class="disclaimer" data-i18n="aiDisclaimer"></p>
     <!-- messages are appended here by chat.js -->
   </main>
 
   <div class="chat-input">
-    <input id="chatText" type="text" placeholder="메시지를 입력하세요…" autocomplete="off">
-    <button id="chatSend" aria-label="전송">➤</button>
+    <input id="chatText" type="text" data-i18n-ph="chatPlaceholder" autocomplete="off">
+    <button id="chatSend" aria-label="send">➤</button>
   </div>
 
   <nav class="tabbar">
-    <a href="index.html"><span class="ico">🏠</span>홈</a>
-    <a class="on" href="chat.html"><span class="ico">💬</span>챗봇</a>
-    <a href="documents.html"><span class="ico">📄</span>서류</a>
-    <a href="status.html"><span class="ico">📍</span>상태</a>
-    <a href="profile.html"><span class="ico">👤</span>MY</a>
+    <a href="index.html"><span class="ico">🏠</span><span data-i18n="tabHome"></span></a>
+    <a class="on" href="chat.html"><span class="ico">💬</span><span data-i18n="tabChat"></span></a>
+    <a href="documents.html"><span class="ico">📄</span><span data-i18n="tabDocs"></span></a>
+    <a href="status.html"><span class="ico">📍</span><span data-i18n="tabStatus"></span></a>
+    <a href="profile.html"><span class="ico">👤</span><span data-i18n="tabMy"></span></a>
   </nav>
 
 </div>
+<script src="js/i18n.js"></script>
 <script src="data/visas.js"></script>
 <script src="js/chat.js"></script>
 </body>

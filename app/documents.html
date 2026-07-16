@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Visa Assist — 서류 제출</title>
+<title>K-Visa Assist — Documents</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,7 +11,8 @@
 
   <header class="appbar">
     <a class="back" href="index.html">‹</a>
-    <span class="title">서류 제출</span>
+    <span class="title" data-i18n="docsPageTitle"></span>
+    <button class="lang">🌐</button>
   </header>
 
   <main>
@@ -21,29 +22,29 @@
         <div class="progress-bar"><i id="docProgress" style="width:0%"></i></div>
         <span class="muted" id="docCount" style="white-space:nowrap"></span>
       </div>
-      <p class="muted" style="margin-top:10px">AI 상담 결과로 자동 생성된 목록입니다.
-      사진 촬영 또는 파일 업로드로 제출하면 담당 변호사·행정사가 검토합니다.</p>
+      <p class="muted" style="margin-top:10px" data-i18n="docsAutoNote"></p>
     </div>
 
     <div class="card" id="docList"></div>
 
     <div class="btn-row">
-      <a class="btn btn-ghost" href="chat.html">💬 서류 질문하기</a>
-      <a class="btn btn-primary" href="status.html">제출 완료</a>
+      <a class="btn btn-ghost" href="chat.html" data-i18n="askDocs"></a>
+      <a class="btn btn-primary" href="status.html" data-i18n="submitDone"></a>
     </div>
 
-    <p class="disclaimer">업로드된 서류는 암호화되어 저장되며, 대행 업무 목적 외에는 사용되지 않습니다.</p>
+    <p class="disclaimer" data-i18n="docsDisclaimer"></p>
   </main>
 
   <nav class="tabbar">
-    <a href="index.html"><span class="ico">🏠</span>홈</a>
-    <a href="chat.html"><span class="ico">💬</span>챗봇</a>
-    <a class="on" href="documents.html"><span class="ico">📄</span>서류</a>
-    <a href="status.html"><span class="ico">📍</span>상태</a>
-    <a href="profile.html"><span class="ico">👤</span>MY</a>
+    <a href="index.html"><span class="ico">🏠</span><span data-i18n="tabHome"></span></a>
+    <a href="chat.html"><span class="ico">💬</span><span data-i18n="tabChat"></span></a>
+    <a class="on" href="documents.html"><span class="ico">📄</span><span data-i18n="tabDocs"></span></a>
+    <a href="status.html"><span class="ico">📍</span><span data-i18n="tabStatus"></span></a>
+    <a href="profile.html"><span class="ico">👤</span><span data-i18n="tabMy"></span></a>
   </nav>
 
 </div>
+<script src="js/i18n.js"></script>
 <script src="data/visas.js"></script>
 <script src="js/documents.js"></script>
 </body>

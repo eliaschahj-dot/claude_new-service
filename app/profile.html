@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Visa Assist — 마이페이지</title>
+<title>K-Visa Assist — My Page</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,7 +11,8 @@
 
   <header class="appbar">
     <a class="back" href="index.html">‹</a>
-    <span class="title">마이페이지</span>
+    <span class="title" data-i18n="myTitle"></span>
+    <button class="lang">🌐</button>
   </header>
 
   <main>
@@ -19,41 +20,50 @@
       <span class="avatar-lg">🧑</span>
       <span>
         <b style="font-size:1rem">Nguyen Van A</b>
-        <p class="muted">베트남 · nguyenvana@email.com</p>
+        <p class="muted">Vietnam · nguyenvana@email.com</p>
       </span>
-      <span class="badge badge-blue" style="margin-left:auto">E-7 진행중</span>
+      <span class="badge badge-blue" style="margin-left:auto">E-7</span>
     </div>
 
     <div class="card">
       <ul class="menu-list">
-        <li><a href="status.html">📍 내 신청 내역</a></li>
-        <li><a href="documents.html">📄 제출한 서류</a></li>
-        <li><a href="#">💳 결제 내역</a></li>
-        <li><a href="#">🌐 언어 설정 (English)</a></li>
-        <li><a href="#">🔔 알림 설정</a></li>
+        <li><a href="status.html" data-i18n="mMyCases"></a></li>
+        <li><a href="documents.html" data-i18n="mMyDocs"></a></li>
+        <li><a href="#" data-i18n="mPayments"></a></li>
+        <li><a href="#" id="langMenu" data-i18n="mLang"></a></li>
+        <li><a href="#" data-i18n="mNoti"></a></li>
       </ul>
     </div>
 
     <div class="card">
       <ul class="menu-list">
-        <li><a href="#">📜 개인정보처리방침</a></li>
-        <li><a href="#">📋 이용약관</a></li>
-        <li><a href="#">👤 사무소 정보 (변호사·행정사)</a></li>
-        <li><a href="#">🚪 로그아웃</a></li>
+        <li><a href="#" data-i18n="mPrivacy"></a></li>
+        <li><a href="#" data-i18n="mTerms"></a></li>
+        <li><a href="#" data-i18n="mOffice"></a></li>
+        <li><a href="#" data-i18n="mLogout"></a></li>
       </ul>
     </div>
 
-    <p class="disclaimer">K-Visa Assist는 변호사·행정사 사무소가 직접 운영하는 출입국 민원 대행 서비스입니다.</p>
+    <p class="disclaimer" data-i18n="myDisclaimer"></p>
   </main>
 
   <nav class="tabbar">
-    <a href="index.html"><span class="ico">🏠</span>홈</a>
-    <a href="chat.html"><span class="ico">💬</span>챗봇</a>
-    <a href="documents.html"><span class="ico">📄</span>서류</a>
-    <a href="status.html"><span class="ico">📍</span>상태</a>
-    <a class="on" href="profile.html"><span class="ico">👤</span>MY</a>
+    <a href="index.html"><span class="ico">🏠</span><span data-i18n="tabHome"></span></a>
+    <a href="chat.html"><span class="ico">💬</span><span data-i18n="tabChat"></span></a>
+    <a href="documents.html"><span class="ico">📄</span><span data-i18n="tabDocs"></span></a>
+    <a href="status.html"><span class="ico">📍</span><span data-i18n="tabStatus"></span></a>
+    <a class="on" href="profile.html"><span class="ico">👤</span><span data-i18n="tabMy"></span></a>
   </nav>
 
 </div>
+<script src="js/i18n.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("langMenu").onclick = (e) => {
+    e.preventDefault();
+    setLang(KVA_LANG === "ko" ? "en" : "ko");
+  };
+});
+</script>
 </body>
 </html>

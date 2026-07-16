@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Visa Assist — 홈</title>
+<title>K-Visa Assist — Home</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,70 +11,70 @@
 
   <header class="appbar">
     <span class="logo">K-Visa Assist</span>
-    <button class="lang">🌐 English ▾</button>
+    <button class="lang">🌐</button>
   </header>
 
   <main>
     <section class="hero">
-      <h1>한국 비자, 대화만으로<br>신청부터 접수까지</h1>
-      <p>AI 챗봇과 대화하면 비자 유형 추천부터 서류 준비, 접수 대행까지 — 거절 시 불복 절차까지 변호사·행정사가 직접 처리합니다.</p>
-      <a class="btn" href="chat.html">💬 AI 상담 시작하기</a>
+      <h1 data-i18n="heroTitle"></h1>
+      <p data-i18n="heroDesc"></p>
+      <a class="btn" href="chat.html" data-i18n="heroCta"></a>
     </section>
 
     <section>
-      <p class="section-title">빠른 메뉴</p>
+      <p class="section-title" data-i18n="quickMenu"></p>
       <div class="quick-grid" style="margin-top:10px">
-        <a href="visas.html"><span class="ico">🛂</span>비자 정보</a>
-        <a href="documents.html"><span class="ico">📄</span>서류 제출</a>
-        <a href="status.html"><span class="ico">📍</span>진행 상태</a>
-        <a href="status.html"><span class="ico">👤</span>전문가 상담</a>
+        <a href="visas.html"><span class="ico">🛂</span><span data-i18n="qVisaInfo"></span></a>
+        <a href="documents.html"><span class="ico">📄</span><span data-i18n="qDocs"></span></a>
+        <a href="status.html"><span class="ico">📍</span><span data-i18n="qStatus"></span></a>
+        <a href="status.html"><span class="ico">👤</span><span data-i18n="qExpert"></span></a>
       </div>
     </section>
 
     <section>
-      <p class="section-title">진행 중인 신청</p>
+      <p class="section-title" data-i18n="ongoing"></p>
       <a class="card case-summary" href="status.html" style="margin-top:10px">
         <span class="dot">🛂</span>
         <span class="info">
-          <b>E-7 특정활동 (취업)</b>
-          <span class="muted">서류 검토 중 · 2/6 단계</span>
+          <b data-i18n="caseTitle"></b>
+          <span class="muted" data-i18n="caseSub"></span>
         </span>
-        <span class="badge badge-blue">진행중</span>
+        <span class="badge badge-blue" data-i18n="inProgress"></span>
       </a>
     </section>
 
     <section>
-      <p class="section-title">자주 찾는 비자</p>
+      <p class="section-title" data-i18n="popular"></p>
       <div class="card visa-card" style="margin-top:10px">
         <div class="head">
           <span class="code">D-2</span>
-          <b>유학 비자</b>
-          <span class="badge badge-gray" style="margin-left:auto">인기</span>
+          <b data-i18n="d2Name"></b>
+          <span class="badge badge-gray" style="margin-left:auto" data-i18n="popularBadge"></span>
         </div>
-        <p class="muted">국내 대학(원) 정규 과정 유학. 입학허가서·재정능력 입증 필요.</p>
+        <p class="muted" data-i18n="d2Desc"></p>
       </div>
       <div class="card visa-card" style="margin-top:10px">
         <div class="head">
           <span class="code">E-7</span>
-          <b>특정활동 (전문인력 취업)</b>
+          <b data-i18n="e7Name"></b>
         </div>
-        <p class="muted">전문 분야 취업. 고용계약서·학위/경력 증빙 필요.</p>
+        <p class="muted" data-i18n="e7Desc"></p>
       </div>
-      <a class="btn btn-ghost" href="visas.html" style="margin-top:12px">전체 비자 보기</a>
+      <a class="btn btn-ghost" href="visas.html" style="margin-top:12px" data-i18n="viewAll"></a>
     </section>
 
-    <p class="disclaimer">본 서비스의 안내는 하이코리아(hikorea.go.kr) 공개 정보를 기반으로 하며,
-    최종 심사 결과는 출입국·외국인청의 판단에 따릅니다.</p>
+    <p class="disclaimer" data-i18n="homeDisclaimer"></p>
   </main>
 
   <nav class="tabbar">
-    <a class="on" href="index.html"><span class="ico">🏠</span>홈</a>
-    <a href="chat.html"><span class="ico">💬</span>챗봇</a>
-    <a href="documents.html"><span class="ico">📄</span>서류</a>
-    <a href="status.html"><span class="ico">📍</span>상태</a>
-    <a href="profile.html"><span class="ico">👤</span>MY</a>
+    <a class="on" href="index.html"><span class="ico">🏠</span><span data-i18n="tabHome"></span></a>
+    <a href="chat.html"><span class="ico">💬</span><span data-i18n="tabChat"></span></a>
+    <a href="documents.html"><span class="ico">📄</span><span data-i18n="tabDocs"></span></a>
+    <a href="status.html"><span class="ico">📍</span><span data-i18n="tabStatus"></span></a>
+    <a href="profile.html"><span class="ico">👤</span><span data-i18n="tabMy"></span></a>
   </nav>
 
 </div>
+<script src="js/i18n.js"></script>
 </body>
 </html>
