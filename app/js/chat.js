@@ -1,9 +1,12 @@
-// K-Visa Assist — scripted chatbot demo.
-// In production this is replaced by an LLM + RAG backend fed by hikorea.go.kr data.
+// K-Visa Assist — 챗봇 (데모: 시나리오 분기 + 지식베이스(data/visas.js) 기반 추천·견적·체크리스트)
+// 프로덕션에서는 LLM 슬롯 인테이크 + 룰엔진 판정으로 대체 (docs/SERVICE_SPEC.md §4)
 
 const log = document.getElementById("chatLog");
 const input = document.getElementById("chatText");
 const sendBtn = document.getElementById("chatSend");
+const DB = window.VISA_DB;
+
+const won = (n) => (n === 0 ? "무료" : n.toLocaleString("ko-KR") + "원");
 
 const scenario = {
   start: {
@@ -11,99 +14,79 @@ const scenario = {
     replies: [
       { label: "🎓 유학", next: "study" },
       { label: "💼 취업", next: "work" },
-      { label: "💍 결혼/가족", next: "family" },
-      { label: "🔄 체류 연장/변경", next: "extend" },
+      { label: "🔄 체류 연장", next: "extend" },
+      { label: "💍 결혼/기타", next: "handoff" },
     ],
   },
   study: {
     bot: "유학을 준비 중이시군요! 어떤 과정으로 입학하시나요?",
     replies: [
-      { label: "대학교 학사/석사/박사", next: "recoD2" },
-      { label: "어학연수", next: "recoD4" },
+      { label: "대학교 학사/석사/박사", next: "studyD2" },
+      { label: "어학연수", next: "recoD4new" },
+    ],
+  },
+  studyD2: {
+    bot: "지금 한국에 계신가요, 해외에 계신가요?",
+    replies: [
+      { label: "한국 (어학연수 D-4 중)", next: "recoD2change" },
+      { label: "해외에서 신규 신청", next: "handoff" },
     ],
   },
   work: {
     bot: "취업 비자를 알아볼게요. 아래 중 어디에 해당하시나요?",
     replies: [
-      { label: "전문 분야 취업 (사무·기술직)", next: "workDegree" },
-      { label: "구직 활동 예정", next: "recoD10" },
+      { label: "취업 확정 (회사 있음)", next: "workDegree" },
+      { label: "구직 활동 예정", next: "d10check" },
     ],
   },
   workDegree: {
-    bot: "전문인력 취업은 보통 E-7(특정활동)에 해당합니다.\n관련 분야 학사 학위 또는 5년 이상 경력이 있으신가요?",
+    bot: "전문인력 취업은 보통 E-7(특정활동)에 해당합니다.\n다음 중 하나에 해당하시나요?\n· 석사 이상 학위\n· 학사 학위 + 관련 경력 1년\n· 관련 경력 5년 이상\n· 국내 대학 관련 전공 졸업",
     replies: [
-      { label: "네, 있습니다", next: "recoE7" },
+      { label: "네, 해당합니다", next: "e7where" },
       { label: "아니요 / 잘 모르겠어요", next: "handoff" },
     ],
   },
-  family: {
-    bot: "한국 국민과의 결혼이신가요, 가족 동반이신가요?",
+  e7where: {
+    bot: "지금 한국에 체류 중이신가요? (예: D-2, D-10 소지)",
     replies: [
-      { label: "한국인 배우자와 결혼", next: "recoF6" },
-      { label: "가족 동반 체류", next: "handoff" },
+      { label: "네, 국내 체류 중", next: "recoE7change" },
+      { label: "해외에 있습니다", next: "recoE7new" },
+    ],
+  },
+  d10check: {
+    bot: "구직 비자(D-10)를 확인해 볼게요.\n학사 이상 학위(국내 전문학사 포함)를 갖고 계신가요?",
+    replies: [
+      { label: "네", next: "d10topik" },
+      { label: "아니요", next: "handoff" },
+    ],
+  },
+  d10topik: {
+    bot: "좋아요! 혹시 TOPIK 4급 이상 성적이나 사회통합프로그램(KIIP) 중간평가 합격이 있으신가요?\n(있으면 점수제 평가가 면제되어 절차가 간단해집니다 ✨)",
+    replies: [
+      { label: "네, 있어요", next: "recoD10" },
+      { label: "없어요 (점수제 평가 필요)", next: "recoD10" },
     ],
   },
   extend: {
-    bot: "현재 체류자격의 연장 또는 변경이시군요. 지금 어떤 비자를 가지고 계신가요? (예: D-2, E-9)\n아래 입력창에 적어주시면 담당 변호사·행정사 검토와 함께 안내해 드릴게요.",
-    replies: [{ label: "전문가에게 바로 문의", next: "handoff" }],
-  },
-  recoD2: {
-    reco: {
-      code: "D-2", name: "유학 비자",
-      points: ["입학허가서 (표준입학허가서)", "재정능력 입증 서류 (잔고증명 등)", "최종학력 증명서", "여권·사진·수수료"],
-    },
-    bot: "신청을 진행하시겠어요? 지금까지의 답변으로 신청서 초안과 서류 체크리스트를 만들어 드립니다.",
+    bot: "현재 어떤 비자를 갖고 계신가요?",
     replies: [
-      { label: "✅ 신청 시작하기", href: "documents.html" },
-      { label: "다른 비자 보기", next: "start" },
+      { label: "D-2 (유학)", next: "recoD2ext" },
+      { label: "D-4 (어학연수)", next: "recoD4ext" },
+      { label: "E-7 (취업)", next: "recoE7ext" },
+      { label: "기타", next: "handoff" },
     ],
   },
-  recoD4: {
-    reco: {
-      code: "D-4", name: "일반연수 (어학연수)",
-      points: ["연수기관 입학허가서", "재정능력 입증 서류", "여권·사진·수수료"],
-    },
-    bot: "신청을 진행하시겠어요?",
-    replies: [
-      { label: "✅ 신청 시작하기", href: "documents.html" },
-      { label: "다른 비자 보기", next: "start" },
-    ],
-  },
-  recoD10: {
-    reco: {
-      code: "D-10", name: "구직 비자",
-      points: ["구직활동계획서", "최종학력 증명서", "점수제 요건 확인 필요"],
-    },
-    bot: "신청을 진행하시겠어요?",
-    replies: [
-      { label: "✅ 신청 시작하기", href: "documents.html" },
-      { label: "다른 비자 보기", next: "start" },
-    ],
-  },
-  recoE7: {
-    reco: {
-      code: "E-7", name: "특정활동 (전문인력 취업)",
-      points: ["고용계약서", "학위증 또는 경력증명서", "고용업체 사업자등록증 등 회사 서류", "직종별 추가 요건 확인 필요"],
-    },
-    bot: "신청을 진행하시겠어요? 지금까지의 답변으로 신청서 초안과 서류 체크리스트를 만들어 드립니다.",
-    replies: [
-      { label: "✅ 신청 시작하기", href: "documents.html" },
-      { label: "다른 비자 보기", next: "start" },
-    ],
-  },
-  recoF6: {
-    reco: {
-      code: "F-6", name: "결혼이민 비자",
-      points: ["혼인관계증명서", "배우자 소득·주거 요건 증빙", "국제결혼 안내프로그램 이수(해당 시)"],
-    },
-    bot: "F-6는 요건 검토가 중요한 비자입니다. 담당 변호사·행정사 검토와 함께 진행하시는 것을 권장드려요.",
-    replies: [
-      { label: "✅ 신청 시작하기", href: "documents.html" },
-      { label: "👤 전문가 상담 연결", next: "handoff" },
-    ],
-  },
+  // 추천 노드: visa/app 코드만 지정하면 지식베이스에서 카드 생성
+  recoD2change: { reco: ["D-2", "change"], next2: "postReco" },
+  recoD2ext:    { reco: ["D-2", "extension"], next2: "postReco" },
+  recoD4new:    { reco: ["D-4", "new"], next2: "postReco" },
+  recoD4ext:    { reco: ["D-4", "extension"], next2: "postReco" },
+  recoD10:      { reco: ["D-10", "change"], next2: "postReco" },
+  recoE7change: { reco: ["E-7", "change"], next2: "postReco" },
+  recoE7new:    { reco: ["E-7", "new"], next2: "postReco" },
+  recoE7ext:    { reco: ["E-7", "extension"], next2: "postReco" },
   handoff: {
-    bot: "알겠습니다. 담당 변호사·행정사에게 상담을 연결해 드릴게요.\n영업일 기준 24시간 이내에 답변을 받으실 수 있습니다. 📩",
+    bot: "이 사안은 담당 변호사·행정사가 직접 확인하는 것이 정확합니다.\n상담을 연결해 드릴게요 — 영업일 기준 24시간 이내 답변드립니다. 📩",
     replies: [
       { label: "처음으로", next: "start" },
       { label: "진행 상태 보기", href: "status.html" },
@@ -127,16 +110,46 @@ function addUser(text) {
   log.appendChild(div);
 }
 
-function addReco(reco) {
+// 지식베이스 기반 추천 + 견적 카드
+function addReco(code, appKey) {
+  const visa = DB.visas[code];
+  const app = visa.applications[appKey];
+  const total = app.agencyFee + app.govFee;
+
   const div = document.createElement("div");
   div.className = "reco-card";
   div.innerHTML = `
-    <span class="badge badge-blue">추천 비자</span>
-    <h3>${reco.code} · ${reco.name}</h3>
-    <p class="muted">주요 요건 / 서류</p>
-    <ul>${reco.points.map((p) => `<li>${p}</li>`).join("")}</ul>
-    <a class="btn btn-ghost" href="visas.html" style="padding:10px;font-size:.84rem">상세 정보 보기</a>`;
+    <span class="badge badge-blue">추천 · ${app.label}</span>
+    <h3>${code} · ${visa.name}</h3>
+    <p class="muted" style="margin-bottom:6px">${visa.summary}</p>
+    <p class="muted"><b>주요 요건</b></p>
+    <ul>${app.requirements.map((r) => `<li>${r}</li>`).join("")}</ul>
+    <div class="fee-box">
+      <div class="fee-row"><span>대행 보수</span><b>${won(app.agencyFee)}</b></div>
+      <div class="fee-row"><span>정부 수수료 (실비)</span><b>${won(app.govFee)}</b></div>
+      <div class="fee-row total"><span>예상 총액 (VAT 별도)</span><b>${won(total)}</b></div>
+      <div class="fee-row"><span>예상 처리기간</span><b>${visa.processDays}</b></div>
+    </div>
+    <p class="muted" style="font-size:.72rem;margin-top:8px">
+      기준일 ${DB.updated} · 출처: 하이코리아 등 (참고용, 최종 견적은 담당 변호사·행정사 확인)
+    </p>`;
   log.appendChild(div);
+
+  addBot(`신청을 진행하시겠어요? 필요 서류 ${app.documents.length + DB.commonDocs.length}종의 체크리스트를 만들어 드립니다.`);
+  const wrap = document.createElement("div");
+  wrap.className = "quick-replies";
+  const goBtn = document.createElement("button");
+  goBtn.innerText = "✅ 신청 시작하기";
+  goBtn.onclick = () => {
+    localStorage.setItem("kva_case", JSON.stringify({ code, appKey, startedAt: Date.now() }));
+    localStorage.removeItem("kva_doc_status");
+    location.href = "documents.html";
+  };
+  const backBtn = document.createElement("button");
+  backBtn.innerText = "다른 비자 보기";
+  backBtn.onclick = () => { wrap.remove(); addUser("다른 비자 보기"); setTimeout(() => goTo("start"), 350); };
+  wrap.append(goBtn, backBtn);
+  log.appendChild(wrap);
 }
 
 function addReplies(replies) {
@@ -159,9 +172,11 @@ function addReplies(replies) {
 function goTo(key) {
   const step = scenario[key];
   if (!step) return;
-  if (step.reco) addReco(step.reco);
-  if (step.bot) addBot(step.bot);
-  if (step.replies) addReplies(step.replies);
+  if (step.reco) { addReco(step.reco[0], step.reco[1]); }
+  else {
+    if (step.bot) addBot(step.bot);
+    if (step.replies) addReplies(step.replies);
+  }
   window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 }
 
@@ -171,7 +186,7 @@ function sendFree() {
   input.value = "";
   addUser(text);
   setTimeout(() => {
-    addBot("입력해 주셔서 감사합니다! 데모 버전에서는 버튼 선택으로 상담이 진행됩니다.\n실제 서비스에서는 AI가 자유 입력을 이해하고 답변합니다. 😊");
+    addBot("입력해 주셔서 감사합니다! 데모 버전에서는 버튼 선택으로 상담이 진행됩니다.\n실제 서비스에서는 AI가 자유 입력을 이해하고 하이코리아 근거와 함께 답변합니다. 😊");
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }, 350);
 }

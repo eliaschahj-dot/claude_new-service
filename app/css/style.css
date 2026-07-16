@@ -296,6 +296,35 @@ main {
   padding: 0 24px;
 }
 
+/* ---------- fee / quote ---------- */
+.fee-box {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+}
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: .82rem;
+  color: var(--ink-soft);
+  padding: 3px 0;
+}
+.fee-row b { color: var(--ink); }
+.fee-row.total {
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
+  padding-top: 7px;
+  font-weight: 700;
+}
+.fee-row.total b { color: var(--primary); }
+
+.visa-detail { border-top: 1px solid var(--line); padding-top: 10px; }
+.app-block + .app-block { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.app-block > b { font-size: .88rem; }
+.mini-list { margin: 2px 0 0 18px; font-size: .8rem; color: var(--ink-soft); line-height: 1.55; }
+
 /* ---------- documents ---------- */
 .doc-item { display: flex; align-items: center; gap: 12px; }
 .doc-item + .doc-item { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
