@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Visa Assist — AI 상담</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+
+  <header class="appbar">
+    <a class="back" href="index.html">‹</a>
+    <span class="title">AI 비자 상담</span>
+    <button class="lang">🌐 EN ▾</button>
+  </header>
+
+  <main class="chat-main" id="chatLog">
+    <p class="disclaimer">AI 상담은 하이코리아 공개 정보를 기반으로 한 참고용 안내입니다.
+    최종 검토는 담당 행정사가 진행합니다.</p>
+    <!-- messages are appended here by chat.js -->
+  </main>
+
+  <div class="chat-input">
+    <input id="chatText" type="text" placeholder="메시지를 입력하세요…" autocomplete="off">
+    <button id="chatSend" aria-label="전송">➤</button>
+  </div>
+
+  <nav class="tabbar">
+    <a href="index.html"><span class="ico">🏠</span>홈</a>
+    <a class="on" href="chat.html"><span class="ico">💬</span>챗봇</a>
+    <a href="documents.html"><span class="ico">📄</span>서류</a>
+    <a href="status.html"><span class="ico">📍</span>상태</a>
+    <a href="profile.html"><span class="ico">👤</span>MY</a>
+  </nav>
+
+</div>
+<script src="js/chat.js"></script>
+</body>
+</html>
