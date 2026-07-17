@@ -105,6 +105,11 @@ type Msg =
   | { kind: "bot" | "user"; text: L | string }
   | { kind: "reco"; code: string; appKey: string };
 
+const ERR_MSG: L = {
+  ko: "죄송해요, 지금 응답을 받지 못했어요. 잠시 후 다시 시도해 주세요. 급하시면 아래 버튼으로 담당자 상담을 연결해 드릴게요.",
+  en: "Sorry, I couldn't get a response just now. Please try again in a moment, or use the buttons below to reach our team.",
+};
+
 export default function ChatPage() {
   const { ui, t, won, lang } = useI18n();
   const router = useRouter();
@@ -112,9 +117,25 @@ export default function ChatPage() {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [pendingReco, setPendingReco] = useState<[string, string] | null>(null);
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const render = (v: L | string) => (typeof v === "string" ? v : t(v));
+
+  // 화면 메시지 → LLM 대화 이력 (API는 user 턴으로 시작해야 하므로 합성 첫 턴 삽입)
+  function toTurns(list: Msg[]) {
+    const turns: { role: "user" | "assistant"; content: string }[] = [
+      { role: "user", content: "(The user opened the visa consultation chat.)" },
+    ];
+    for (const m of list) {
+      if (m.kind === "reco") {
+        turns.push({ role: "assistant", content: `[Recommended ${m.code} / ${m.appKey} via recommend_visa]` });
+      } else {
+        turns.push({ role: m.kind === "bot" ? "assistant" : "user", content: render(m.text) });
+      }
+    }
+    return turns;
+  }
 
   function goTo(key: string) {
     const step = SCENARIO[key];
@@ -157,12 +178,39 @@ export default function ChatPage() {
     router.push("/documents");
   }
 
-  function sendFree() {
+  // 자유 입력 → Claude API (서버 라우트 /api/chat)
+  async function sendFree() {
     const v = text.trim();
-    if (!v) return;
+    if (!v || loading) return;
     setText("");
-    setMsgs((m) => [...m, { kind: "user", text: v }]);
-    setTimeout(() => setMsgs((m) => [...m, { kind: "bot", text: ui("freeReply") }]), 300);
+    const withUser: Msg[] = [...msgs, { kind: "user", text: v }];
+    setMsgs(withUser);
+    setReplies([]);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: toTurns(withUser), lang }),
+      });
+      if (!res.ok) throw new Error(`chat api ${res.status}`);
+      const data: { reply: string; recommendation?: { visaCode: string; applicationKey: string } } = await res.json();
+      setMsgs((m) => {
+        const out = [...m];
+        if (data.reply) out.push({ kind: "bot", text: data.reply });
+        if (data.recommendation) {
+          out.push({ kind: "reco", code: data.recommendation.visaCode, appKey: data.recommendation.applicationKey });
+        }
+        return out;
+      });
+      if (data.recommendation) {
+        setPendingReco([data.recommendation.visaCode, data.recommendation.applicationKey]);
+      }
+    } catch {
+      setMsgs((m) => [...m, { kind: "bot", text: ERR_MSG }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { goTo("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -211,9 +259,15 @@ export default function ChatPage() {
             </button>
           </div>
         )}
-        {replies.length > 0 && (
+        {replies.length > 0 && !loading && (
           <div className="quick-replies">
             {replies.map((r, i) => <button key={i} onClick={() => pick(r)}>{t(r.label)}</button>)}
+          </div>
+        )}
+        {loading && (
+          <div className="msg">
+            <span className="avatar">🤖</span>
+            <span className="bubble typing">● ● ●</span>
           </div>
         )}
         <div ref={bottomRef} />
@@ -221,8 +275,8 @@ export default function ChatPage() {
       <div className="chat-input">
         <input value={text} onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendFree()}
-          placeholder={ui("chatPlaceholder")} autoComplete="off" />
-        <button onClick={sendFree} aria-label="send">➤</button>
+          placeholder={ui("chatPlaceholder")} autoComplete="off" disabled={loading} />
+        <button onClick={sendFree} aria-label="send" disabled={loading}>➤</button>
       </div>
       <Tabbar />
     </>

@@ -442,3 +442,12 @@ main {
 }
 .tabbar a .ico { font-size: 1.25rem; }
 .tabbar a.on { color: var(--primary); }
+
+/* ---------- chat typing indicator ---------- */
+.bubble.typing {
+  color: var(--ink-soft);
+  letter-spacing: 2px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.chat-input input:disabled, .chat-input button:disabled { opacity: .6; }
