@@ -451,3 +451,9 @@ main {
 }
 @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 .chat-input input:disabled, .chat-input button:disabled { opacity: .6; }
+
+/* ---------- home (hero-only) ---------- */
+.home-main { justify-content: center; }
+.hero-solo { padding: 44px 24px; }
+.hero-solo h1 { font-size: 1.55rem; margin-bottom: 14px; }
+.hero-solo p { font-size: .95rem; margin-bottom: 26px; }

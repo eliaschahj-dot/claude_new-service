@@ -442,3 +442,9 @@ main {
 }
 .tabbar a .ico { font-size: 1.25rem; }
 .tabbar a.on { color: var(--primary); }
+
+/* ---------- home (hero-only) ---------- */
+.home-main { justify-content: center; }
+.hero-solo { padding: 44px 24px; }
+.hero-solo h1 { font-size: 1.55rem; margin-bottom: 14px; }
+.hero-solo p { font-size: .95rem; margin-bottom: 26px; }
