@@ -1,22 +1,45 @@
 "use client";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 
 export default function ProfilePage() {
   const { ui, lang, setLang } = useI18n();
+  const { data: session, status } = useSession();
+  const user = session?.user;
+
   return (
     <>
       <Appbar titleKey="myTitle" />
       <main>
-        <div className="card profile-head">
-          <span className="avatar-lg">🧑</span>
-          <span>
-            <b style={{ fontSize: "1rem" }}>Nguyen Van A</b>
-            <p className="muted">Vietnam · nguyenvana@email.com</p>
-          </span>
-          <span className="badge badge-blue" style={{ marginLeft: "auto" }}>E-7</span>
-        </div>
+        {status === "authenticated" && user ? (
+          <div className="card profile-head">
+            {user.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="avatar-img" src={user.image} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="avatar-lg">🧑</span>
+            )}
+            <span>
+              <b style={{ fontSize: "1rem" }}>{user.name ?? user.email}</b>
+              <p className="muted">{user.email}</p>
+            </span>
+            <span className="badge badge-green" style={{ marginLeft: "auto" }}>Google</span>
+          </div>
+        ) : (
+          <div className="card profile-head">
+            <span className="avatar-lg">🔐</span>
+            <span>
+              <b style={{ fontSize: "1rem" }}>{ui("guest")}</b>
+              <p className="muted">{ui("loginDesc")}</p>
+            </span>
+          </div>
+        )}
+
+        {status !== "authenticated" && (
+          <Link className="btn btn-primary" href="/login">{ui("loginCta")}</Link>
+        )}
 
         <div className="card">
           <ul className="menu-list">
@@ -33,7 +56,9 @@ export default function ProfilePage() {
             <li><a href="#">{ui("mPrivacy")}</a></li>
             <li><a href="#">{ui("mTerms")}</a></li>
             <li><a href="#">{ui("mOffice")}</a></li>
-            <li><a href="#">{ui("mLogout")}</a></li>
+            {status === "authenticated" && (
+              <li><a href="#" onClick={(e) => { e.preventDefault(); signOut({ redirectTo: "/" }); }}>{ui("logout")}</a></li>
+            )}
           </ul>
         </div>
 

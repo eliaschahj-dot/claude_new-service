@@ -457,3 +457,31 @@ main {
 .hero-solo { padding: 44px 24px; }
 .hero-solo h1 { font-size: 1.55rem; margin-bottom: 14px; }
 .hero-solo p { font-size: .95rem; margin-bottom: 26px; }
+
+/* ---------- login ---------- */
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 36px 24px;
+}
+.login-logo { font-size: 2.4rem; }
+.login-card h2 { font-size: 1.2rem; color: var(--primary); }
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+.google-btn:active { background: var(--bg); }
+.avatar-img {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}

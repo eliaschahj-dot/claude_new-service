@@ -15,6 +15,7 @@ export interface Case {
   appKey: string;
   stage: "consult" | "docs" | "review" | "filed" | "decided";
   lang: string;
+  userId?: string; // 로그인 사용자(email) 귀속 — 비로그인 데모 케이스는 없음
   docStatus: Record<string, DocStatus>;
   createdAt: string;
   updatedAt: string;
@@ -37,7 +38,7 @@ async function writeDb(db: DbShape): Promise<void> {
   await fs.writeFile(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-export async function createCase(input: { visaCode: string; appKey: string; lang?: string }): Promise<Case> {
+export async function createCase(input: { visaCode: string; appKey: string; lang?: string; userId?: string }): Promise<Case> {
   const db = await readDb();
   const now = new Date().toISOString();
   const c: Case = {
@@ -46,6 +47,7 @@ export async function createCase(input: { visaCode: string; appKey: string; lang
     appKey: input.appKey,
     stage: "docs",
     lang: input.lang ?? "en",
+    userId: input.userId,
     docStatus: {},
     createdAt: now,
     updatedAt: now,

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SessionProvider } from "next-auth/react";
 import { LangProvider } from "@/lib/i18n";
 import "./globals.css";
 
@@ -16,9 +17,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
-        <LangProvider>
-          <div className="phone">{children}</div>
-        </LangProvider>
+        <SessionProvider>
+          <LangProvider>
+            <div className="phone">{children}</div>
+          </LangProvider>
+        </SessionProvider>
       </body>
     </html>
   );

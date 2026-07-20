@@ -3,6 +3,7 @@
 // 프로덕션에서는 LLM 슬롯 인테이크 + 룰엔진 판정 API로 대체 (docs/SERVICE_SPEC.md §4)
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS, COMMON_DOCS, DB_UPDATED, L } from "@/lib/visa-db";
@@ -113,6 +114,7 @@ const ERR_MSG: L = {
 export default function ChatPage() {
   const { ui, t, won, lang } = useI18n();
   const router = useRouter();
+  const { status: sessionStatus } = useSession();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [pendingReco, setPendingReco] = useState<[string, string] | null>(null);
@@ -167,12 +169,21 @@ export default function ChatPage() {
 
   async function startApplication() {
     if (!pendingReco) return;
+    // 신청(케이스 생성)은 로그인 필수 — 미로그인 시 구글 로그인으로 이동 후 복귀
+    if (sessionStatus !== "authenticated") {
+      router.push("/login?next=/chat");
+      return;
+    }
     const [visaCode, appKey] = pendingReco;
     const res = await fetch("/api/cases", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visaCode, appKey, lang }),
     });
+    if (res.status === 401) {
+      router.push("/login?next=/chat");
+      return;
+    }
     const c = await res.json();
     localStorage.setItem("kva_case_id", c.id);
     router.push("/documents");

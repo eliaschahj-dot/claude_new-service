@@ -28,6 +28,25 @@ npm install
 npm run dev    # http://localhost:3000
 ```
 
+### 환경변수 (`web/.env.local`)
+
+```bash
+ANTHROPIC_API_KEY=...        # AI 챗봇 (console.anthropic.com)
+AUTH_SECRET=...              # openssl rand -base64 32 로 생성
+AUTH_TRUST_HOST=true
+AUTH_GOOGLE_ID=...           # 구글 로그인 (아래 참고)
+AUTH_GOOGLE_SECRET=...
+```
+
+### 구글 로그인 설정
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → 프로젝트 생성 → **API 및 서비스 → OAuth 동의 화면** 구성 (External, 앱 이름/이메일 입력)
+2. **사용자 인증 정보 → 사용자 인증 정보 만들기 → OAuth 클라이언트 ID** → 유형: 웹 애플리케이션
+3. **승인된 리디렉션 URI**에 추가:
+   - 로컬: `http://localhost:3000/api/auth/callback/google`
+   - 배포 시: `https://<도메인>/api/auth/callback/google`
+4. 발급된 클라이언트 ID/보안 비밀을 `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`에 입력
+
 - 전 화면(홈/챗봇/비자정보/서류/상태/MY) React 이관 완료, KO/EN 지원
 - API: `POST /api/cases` (케이스 생성), `GET/PATCH /api/cases/:id` (조회/서류 상태 갱신)
 - 저장소는 개발용 파일 스토어(`.data/db.json`) — PostgreSQL 교체 예정
