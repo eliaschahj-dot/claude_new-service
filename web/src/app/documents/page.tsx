@@ -5,21 +5,33 @@ import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS, COMMON_DOCS, VisaDocument } from "@/lib/visa-db";
 import type { Case, DocStatus } from "@/lib/store";
+import type { CaseFile } from "@/lib/files";
 
 interface DocRow extends VisaDocument { id: string; common: boolean }
 
 export default function DocumentsPage() {
   const { ui, t } = useI18n();
   const [kase, setKase] = useState<Case | null>(null);
+  const [files, setFiles] = useState<Record<string, CaseFile>>({});
+  const [busyDoc, setBusyDoc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingDoc = useRef<string | null>(null);
+
+  async function loadFiles(caseId: string) {
+    const r = await fetch(`/api/cases/${caseId}/files`);
+    if (!r.ok) return;
+    const list: CaseFile[] = await r.json();
+    const byDoc: Record<string, CaseFile> = {};
+    for (const f of list) if (!byDoc[f.docId]) byDoc[f.docId] = f; // 최신순 응답 → 첫 항목 유지
+    setFiles(byDoc);
+  }
 
   useEffect(() => {
     const id = localStorage.getItem("kva_case_id");
     (async () => {
       if (id) {
         const r = await fetch(`/api/cases/${id}`);
-        if (r.ok) { setKase(await r.json()); return; }
+        if (r.ok) { setKase(await r.json()); await loadFiles(id); return; }
       }
       // localStorage에 없거나(다른 기기·로그인) 만료된 경우, 로그인 사용자의 최신 케이스로 대체
       const list = await fetch("/api/cases");
@@ -28,6 +40,7 @@ export default function DocumentsPage() {
         if (cases[0]) {
           localStorage.setItem("kva_case_id", cases[0].id);
           setKase(cases[0]);
+          await loadFiles(cases[0].id);
         }
       }
     })().catch(() => null);
@@ -72,15 +85,29 @@ export default function DocumentsPage() {
 
   async function onFile() {
     const docId = pendingDoc.current;
-    if (!docId || !fileRef.current?.files?.length) return;
-    fileRef.current.value = "";
-    // 데모: 파일 자체는 전송하지 않고 상태만 갱신 — 실제로는 암호화 스토리지 업로드
-    const res = await fetch(`/api/cases/${kase!.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ docId, status: "uploaded" }),
-    });
-    if (res.ok) setKase(await res.json());
+    const file = fileRef.current?.files?.[0];
+    if (!docId || !file) return;
+    fileRef.current!.value = "";
+    if (file.size > 10 * 1024 * 1024) { alert(ui("upFailSize")); return; }
+
+    setBusyDoc(docId);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("docId", docId);
+      const res = await fetch(`/api/cases/${kase!.id}/files`, { method: "POST", body: form });
+      if (res.ok) {
+        const { file: meta, case: updated } = await res.json();
+        setFiles((prev) => ({ ...prev, [docId]: meta }));
+        if (updated) setKase(updated);
+      } else if (res.status === 413) alert(ui("upFailSize"));
+      else if (res.status === 415) alert(ui("upFailType"));
+      else alert(ui("upFail"));
+    } catch {
+      alert(ui("upFail"));
+    } finally {
+      setBusyDoc(null);
+    }
   }
 
   return (
@@ -102,6 +129,7 @@ export default function DocumentsPage() {
         <div className="card">
           {docs.map((d) => {
             const st = stMeta(kase.docStatus[d.id] ?? "none");
+            const f = files[d.id];
             return (
               <div className="doc-item" key={d.id}>
                 <span className="ico">{icon(d)}</span>
@@ -109,8 +137,19 @@ export default function DocumentsPage() {
                   <b>{t(d.name)}</b>
                   <span className={`badge ${st.cls}`}>{st.label}</span><br />
                   <span>{ui("issuer")}: {t(d.issuer)}</span>
+                  {f && (
+                    <>
+                      <br />
+                      <a href={`/api/cases/${kase.id}/files/${f.id}`} target="_blank" rel="noreferrer"
+                         style={{ fontSize: ".75rem", color: "var(--primary)", wordBreak: "break-all" }}>
+                        📎 {f.filename} ({Math.max(1, Math.round(f.size / 1024))}KB)
+                      </a>
+                    </>
+                  )}
                 </span>
-                <button className="action" onClick={() => pickFile(d.id)}>{st.action}</button>
+                <button className="action" disabled={busyDoc === d.id} onClick={() => pickFile(d.id)}>
+                  {busyDoc === d.id ? ui("uploading") : st.action}
+                </button>
               </div>
             );
           })}

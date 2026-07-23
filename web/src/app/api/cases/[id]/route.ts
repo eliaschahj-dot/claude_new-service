@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCase, updateDocStatus, DocStatus } from "@/lib/store";
-import { auth } from "@/lib/auth";
+import { updateDocStatus, DocStatus } from "@/lib/store";
+import { loadOwnCase } from "@/lib/own-case";
 
 type Params = { params: Promise<{ id: string }> };
-
-// 케이스는 생성한 사용자만 조회·수정 가능 — 다른 로그인 사용자의 케이스는 404로 감춘다(존재 여부 노출 방지).
-async function loadOwnCase(id: string) {
-  const session = await auth();
-  if (!session?.user?.email) return { error: 401 as const };
-  const c = await getCase(id);
-  if (!c || c.userId !== session.user.email) return { error: 404 as const };
-  return { case: c };
-}
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;

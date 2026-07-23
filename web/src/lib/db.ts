@@ -40,7 +40,18 @@ async function ensureSchema(): Promise<void> {
            created_at timestamptz NOT NULL DEFAULT now(),
            updated_at timestamptz NOT NULL DEFAULT now()
          );
-         CREATE INDEX IF NOT EXISTS cases_user_id_idx ON cases (user_id);`,
+         CREATE INDEX IF NOT EXISTS cases_user_id_idx ON cases (user_id);
+         CREATE TABLE IF NOT EXISTS case_files (
+           id          uuid PRIMARY KEY,
+           case_id     uuid NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
+           doc_id      text NOT NULL,
+           filename    text NOT NULL,
+           mime        text NOT NULL,
+           size_bytes  integer NOT NULL,
+           data        bytea NOT NULL,
+           uploaded_at timestamptz NOT NULL DEFAULT now()
+         );
+         CREATE INDEX IF NOT EXISTS case_files_case_id_idx ON case_files (case_id);`,
       )
       .then(() => undefined)
       .catch((err) => {
