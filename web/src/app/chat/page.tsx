@@ -1,6 +1,7 @@
 "use client";
-// AI 챗봇 — 데모: 시나리오 분기 + 지식베이스 기반 추천·견적.
-// 프로덕션에서는 LLM 슬롯 인테이크 + 룰엔진 판정 API로 대체 (docs/SERVICE_SPEC.md §4)
+// AI 챗봇 — 모든 대화(버튼 선택 포함)가 LLM(/api/chat)으로 흐른다.
+// 버튼은 첫 턴의 목적 선택 UX일 뿐, 누르면 해당 문장을 사용자 발화로 보낸다.
+// 질문-답변 문맥 유지·심층 인터뷰·요건 진단은 서버 시스템 프롬프트(lib/ai.ts)가 담당.
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -8,99 +9,20 @@ import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS, COMMON_DOCS, DB_UPDATED, L } from "@/lib/visa-db";
 
-type Reply = { label: L; next?: string; href?: string };
-type Step = { bot?: L; replies?: Reply[]; reco?: [string, string] };
+type Reply = { label: L; send: L };
 
-const SCENARIO: Record<string, Step> = {
-  start: {
-    bot: { ko: "안녕하세요! 👋 K-Visa Assist AI 상담원입니다.\n비자 상담을 시작할게요. 한국에 오시는(계시는) 목적이 무엇인가요?",
-           en: "Hello! 👋 I'm the K-Visa Assist AI consultant.\nLet's find your visa. What brings you to Korea?" },
-    replies: [
-      { label: { ko: "🎓 유학", en: "🎓 Study" }, next: "study" },
-      { label: { ko: "💼 취업", en: "💼 Work" }, next: "work" },
-      { label: { ko: "🔄 체류 연장", en: "🔄 Extend my stay" }, next: "extend" },
-      { label: { ko: "💍 결혼/기타", en: "💍 Marriage / Other" }, next: "handoff" },
-    ],
-  },
-  study: {
-    bot: { ko: "유학을 준비 중이시군요! 어떤 과정으로 입학하시나요?",
-           en: "Planning to study in Korea! Which program will you enroll in?" },
-    replies: [
-      { label: { ko: "대학교 학사/석사/박사", en: "University degree (BA/MA/PhD)" }, next: "studyD2" },
-      { label: { ko: "어학연수", en: "Korean language course" }, next: "recoD4new" },
-    ],
-  },
-  studyD2: {
-    bot: { ko: "지금 한국에 계신가요, 해외에 계신가요?", en: "Are you currently in Korea or abroad?" },
-    replies: [
-      { label: { ko: "한국 (어학연수 D-4 중)", en: "In Korea (on D-4)" }, next: "recoD2change" },
-      { label: { ko: "해외에서 신규 신청", en: "Abroad (new application)" }, next: "handoff" },
-    ],
-  },
-  work: {
-    bot: { ko: "취업 비자를 알아볼게요. 아래 중 어디에 해당하시나요?", en: "Let's look at work visas. Which describes you?" },
-    replies: [
-      { label: { ko: "취업 확정 (회사 있음)", en: "I have a job offer" }, next: "workDegree" },
-      { label: { ko: "구직 활동 예정", en: "I'm looking for a job" }, next: "d10check" },
-    ],
-  },
-  workDegree: {
-    bot: { ko: "전문인력 취업은 보통 E-7(특정활동)에 해당합니다.\n다음 중 하나에 해당하시나요?\n· 석사 이상 학위\n· 학사 학위 + 관련 경력 1년\n· 관련 경력 5년 이상\n· 국내 대학 관련 전공 졸업",
-           en: "Professional employment usually falls under E-7 (Specific Activities).\nDo any of these apply to you?\n· Master's degree or higher\n· Bachelor's + 1 year of related career\n· 5+ years of related career\n· Korean university graduate in a related major" },
-    replies: [
-      { label: { ko: "네, 해당합니다", en: "Yes, that's me" }, next: "e7where" },
-      { label: { ko: "아니요 / 잘 모르겠어요", en: "No / Not sure" }, next: "handoff" },
-    ],
-  },
-  e7where: {
-    bot: { ko: "지금 한국에 체류 중이신가요? (예: D-2, D-10 소지)", en: "Are you currently staying in Korea? (e.g. on D-2 or D-10)" },
-    replies: [
-      { label: { ko: "네, 국내 체류 중", en: "Yes, I'm in Korea" }, next: "recoE7change" },
-      { label: { ko: "해외에 있습니다", en: "I'm abroad" }, next: "recoE7new" },
-    ],
-  },
-  d10check: {
-    bot: { ko: "구직 비자(D-10)를 확인해 볼게요.\n학사 이상 학위(국내 전문학사 포함)를 갖고 계신가요?",
-           en: "Let's check the D-10 job seeker visa.\nDo you have a Bachelor's degree or higher (Korean associate degree counts)?" },
-    replies: [
-      { label: { ko: "네", en: "Yes" }, next: "d10topik" },
-      { label: { ko: "아니요", en: "No" }, next: "handoff" },
-    ],
-  },
-  d10topik: {
-    bot: { ko: "좋아요! 혹시 TOPIK 4급 이상 성적이나 사회통합프로그램(KIIP) 중간평가 합격이 있으신가요?\n(있으면 점수제 평가가 면제되어 절차가 간단해집니다 ✨)",
-           en: "Great! Do you have TOPIK level 4+ or a KIIP mid-term pass?\n(Either one waives the points assessment and simplifies things ✨)" },
-    replies: [
-      { label: { ko: "네, 있어요", en: "Yes, I do" }, next: "recoD10" },
-      { label: { ko: "없어요 (점수제 평가 필요)", en: "No (points assessment needed)" }, next: "recoD10" },
-    ],
-  },
-  extend: {
-    bot: { ko: "현재 어떤 비자를 갖고 계신가요?", en: "Which visa do you currently hold?" },
-    replies: [
-      { label: { ko: "D-2 (유학)", en: "D-2 (Study)" }, next: "recoD2ext" },
-      { label: { ko: "D-4 (어학연수)", en: "D-4 (Language)" }, next: "recoD4ext" },
-      { label: { ko: "E-7 (취업)", en: "E-7 (Work)" }, next: "recoE7ext" },
-      { label: { ko: "기타", en: "Other" }, next: "handoff" },
-    ],
-  },
-  recoD2change: { reco: ["D-2", "change"] },
-  recoD2ext: { reco: ["D-2", "extension"] },
-  recoD4new: { reco: ["D-4", "new"] },
-  recoD4ext: { reco: ["D-4", "extension"] },
-  recoD10: { reco: ["D-10", "change"] },
-  recoE7change: { reco: ["E-7", "change"] },
-  recoE7new: { reco: ["E-7", "new"] },
-  recoE7ext: { reco: ["E-7", "extension"] },
-  handoff: {
-    bot: { ko: "이 사안은 담당 변호사·행정사가 직접 확인하는 것이 정확합니다.\n상담을 연결해 드릴게요 — 영업일 기준 24시간 이내 답변드립니다. 📩",
-           en: "For this case, a direct review by our attorney & administrative agent is best.\nWe'll connect you — you'll hear back within 1 business day. 📩" },
-    replies: [
-      { label: { ko: "처음으로", en: "Start over" }, next: "start" },
-      { label: { ko: "진행 상태 보기", en: "View my progress" }, href: "/status" },
-    ],
-  },
+const GREETING: L = {
+  ko: "안녕하세요! 👋 K-Visa Assist AI 상담원입니다.\n비자 상담을 시작할게요. 한국에 오시는(계시는) 목적이 무엇인가요?\n아래에서 고르거나, 상황을 직접 입력해 주세요.",
+  en: "Hello! 👋 I'm the K-Visa Assist AI consultant.\nLet's find your visa. What brings you to Korea?\nPick below, or just describe your situation.",
 };
+
+const START_REPLIES: Reply[] = [
+  { label: { ko: "🎓 유학", en: "🎓 Study" }, send: { ko: "유학 비자를 알아보고 싶어요.", en: "I want to study in Korea — which visa do I need?" } },
+  { label: { ko: "💼 취업 · 구직", en: "💼 Work" }, send: { ko: "한국에서 일하려고 하는데 어떤 비자가 필요한가요?", en: "I want to work in Korea — which visa do I need?" } },
+  { label: { ko: "🔄 체류 연장", en: "🔄 Extend my stay" }, send: { ko: "지금 비자 체류기간을 연장하고 싶어요.", en: "I need to extend my current stay." } },
+  { label: { ko: "💍 결혼 비자", en: "💍 Marriage visa" }, send: { ko: "한국인과 결혼해서 결혼 비자를 알아보고 있어요.", en: "I'm marrying a Korean citizen and looking into the marriage visa." } },
+  { label: { ko: "🏠 영주권 (F-5)", en: "🏠 Permanent residency" }, send: { ko: "영주권(F-5)을 받고 싶어요.", en: "I want permanent residency (F-5)." } },
+];
 
 type Msg =
   | { kind: "bot" | "user"; text: L | string }
@@ -139,32 +61,10 @@ export default function ChatPage() {
     return turns;
   }
 
-  function goTo(key: string) {
-    const step = SCENARIO[key];
-    if (!step) return;
-    if (step.reco) {
-      const [code, appKey] = step.reco;
-      const n = VISAS[code].applications[appKey].documents.length + COMMON_DOCS.length;
-      setMsgs((m) => [
-        ...m,
-        { kind: "reco", code, appKey },
-        { kind: "bot", text: { ko: `신청을 진행하시겠어요? 필요 서류 ${n}종의 체크리스트를 만들어 드립니다.`,
-                               en: `Ready to apply? I'll generate your checklist of ${n} documents.` } },
-      ]);
-      setPendingReco([code, appKey]);
-      setReplies([]);
-    } else {
-      if (step.bot) setMsgs((m) => [...m, { kind: "bot", text: step.bot! }]);
-      setPendingReco(null);
-      setReplies(step.replies ?? []);
-    }
-  }
-
+  // 버튼 선택 = 해당 문장을 사용자 발화로 전송 (스크립트 분기 없음 — 문맥은 LLM이 유지)
   function pick(r: Reply) {
-    if (r.href) { router.push(r.href); return; }
-    setMsgs((m) => [...m, { kind: "user", text: r.label }]);
     setReplies([]);
-    setTimeout(() => goTo(r.next!), 300);
+    void sendMessage(t(r.send));
   }
 
   async function startApplication() {
@@ -190,10 +90,15 @@ export default function ChatPage() {
   }
 
   // 자유 입력 → Claude API (서버 라우트 /api/chat)
-  async function sendFree() {
+  function sendFree() {
     const v = text.trim();
     if (!v || loading) return;
     setText("");
+    void sendMessage(v);
+  }
+
+  async function sendMessage(v: string) {
+    if (loading) return;
     const withUser: Msg[] = [...msgs, { kind: "user", text: v }];
     setMsgs(withUser);
     setReplies([]);
@@ -224,7 +129,10 @@ export default function ChatPage() {
     }
   }
 
-  useEffect(() => { goTo("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setMsgs([{ kind: "bot", text: GREETING }]);
+    setReplies(START_REPLIES);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, replies]);
 
   return (
@@ -265,7 +173,10 @@ export default function ChatPage() {
         {pendingReco && (
           <div className="quick-replies">
             <button onClick={startApplication}>{ui("startBtn")}</button>
-            <button onClick={() => { setPendingReco(null); setMsgs((m) => [...m, { kind: "user", text: ui("otherBtn") }]); setTimeout(() => goTo("start"), 300); }}>
+            <button onClick={() => {
+              setPendingReco(null);
+              void sendMessage(lang === "ko" ? "다른 비자 옵션도 검토해 주세요." : "Please look at other visa options for me.");
+            }}>
               {ui("otherBtn")}
             </button>
           </div>
