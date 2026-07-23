@@ -36,6 +36,7 @@ AUTH_SECRET=...              # openssl rand -base64 32 로 생성
 AUTH_TRUST_HOST=true
 AUTH_GOOGLE_ID=...           # 구글 로그인 (아래 참고)
 AUTH_GOOGLE_SECRET=...
+DATABASE_URL=...             # PostgreSQL 연결 문자열 (아래 참고). 미설정 시 개발용 파일 저장(.data/db.json)으로 자동 폴백
 ```
 
 ### 구글 로그인 설정
@@ -46,6 +47,29 @@ AUTH_GOOGLE_SECRET=...
    - 로컬: `http://localhost:3000/api/auth/callback/google`
    - 배포 시: `https://<도메인>/api/auth/callback/google`
 4. 발급된 클라이언트 ID/보안 비밀을 `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`에 입력
+
+### 데이터베이스(PostgreSQL) 연동
+
+신청 케이스(비자·서류 상태)는 `DATABASE_URL`이 설정되면 PostgreSQL에, 미설정이면 로컬
+개발용 파일(`.data/db.json`)에 저장됩니다. **Vercel 등 서버리스 배포에서는 파일 저장이
+유지되지 않으므로 실서비스에는 DB 연결이 필수**입니다. 스키마(`cases` 테이블)는 앱이
+첫 요청 시 자동 생성하므로 별도 마이그레이션 스크립트 실행이 필요 없습니다.
+
+**무료 Postgres 발급 (택1, 5분):**
+
+1. **[Neon](https://neon.tech)** (권장) → 프로젝트 생성 → Connection string 복사
+2. **[Supabase](https://supabase.com)** → 프로젝트 생성 → Settings → Database → Connection string (Transaction pooler 권장)
+3. **Vercel Postgres / Vercel Storage → Postgres** (Vercel에 배포 중이면 프로젝트 내에서 바로 생성 가능)
+
+발급받은 연결 문자열을 `.env.local`(로컬) 또는 Vercel 프로젝트의 Environment Variables
+(배포)에 `DATABASE_URL`로 등록합니다. 예:
+
+```bash
+DATABASE_URL=postgresql://user:password@ep-xxxx.region.neon.tech/dbname?sslmode=require
+```
+
+케이스 조회·수정 API(`/api/cases`)는 로그인 세션의 이메일과 케이스 소유자가 일치하는
+경우에만 접근을 허용합니다(다른 사용자의 케이스는 404로 응답).
 
 - 전 화면(홈/챗봇/비자정보/서류/상태/MY) React 이관 완료, KO/EN 지원
 - API: `POST /api/cases` (케이스 생성), `GET/PATCH /api/cases/:id` (조회/서류 상태 갱신)

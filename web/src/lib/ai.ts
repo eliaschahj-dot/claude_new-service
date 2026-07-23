@@ -26,14 +26,14 @@ const EXTENDED_KNOWLEDGE = `
 - Education (max 25): PhD STEM 25, PhD other 20; Master's STEM 20, other 17; Bachelor's STEM 17, other 15; Associate STEM 15, other 10.
 - Korean/KIIP (max 20): TOPIK 5+/KIIP 5 = 20, TOPIK 4 = 15, TOPIK 3 = 10, TOPIK 2 = 5, TOPIK 1 = 3.
 - Annual income (max 60, biggest lever): 100M+ = 60 / 90-100M = 58 / 80-90M = 56 / 70-80M = 53 / 60-70M = 50 / 50-60M = 45 / 40-50M = 40 / 30-40M = 30 / min-wage~30M = 10 / below = 0. Proven by 소득금액증명 (tax office income certificate).
-- Bonuses (max +40): Korean-War-ally talent +20, central-ministry recommendation +20, KIIP stage 5 completion +10, top-university (THE200/QS500) PhD +30 / BA +20 / MA +10, Korean-university degrees, volunteer work up to +7.
+- Bonuses (max +40): Korean-War-ally talent +20, central-ministry recommendation +20, KIIP stage 5 completion +10, top-university (THE200/QS500) PhD +30 / BA +20 / MA +10, Korean-university degree PhD +10 / Master's +7 / Bachelor's +5 (per immigration manual), volunteer work up to +7.
 - Deductions: criminal fine 3M+ = −40, 2-3M = −30, under 2M = −20; immigration violations −10 to −30 (departure order/deportation −30).
 - 80 points does NOT guarantee approval — status, employment stability, documents, violations all matter. Attorney does a scored pre-assessment first.
 
 ### F-6 — Marriage migrant (결혼이민)
 - Reviewed strictly on: genuineness, couple's ability to communicate (Korean or the foreign spouse's language), how the couple met, wedding/cohabitation evidence, and the Korean spouse's support capacity (annual income threshold by household size, published yearly) + housing.
 - An immigration INTERVIEW is standard. Common refusal reasons: cannot communicate with each other, inconsistent relationship story, insufficient spouse income, thin photo/life evidence. We run mock interviews with the attorney to prepare couples.
-- Pathway: F-6 → after 2 years F-2 possible, after meeting residency conditions → F-5 (spouse category). After divorce, keeping F-6/converting to F-2 may still be possible when the Korean side is at fault — attorney review essential.
+- Pathway: F-6 → F-5-2 (spouse-of-national PR) after 2+ years of stay on F-6, with income around 1× GNI and KIIP stage 5 (or comprehensive test pass) — a lower income bar than general F-5-1. After divorce, keeping F-6/converting to F-2 may still be possible when the Korean side is at fault — attorney review essential.
 
 ### D-8 — Corporate investment (기업투자) & company formation
 - D-8-1: 100M+ KRW FDI into a Korean corporation (roughly one D-8 visa per 100M invested), real stake (generally 10%+ voting shares), working as executive/manager/specialist. 100% foreign ownership is allowed.
@@ -77,7 +77,7 @@ const EXTENDED_KNOWLEDGE = `
 - D-4 → D-2 (once admitted to a degree program) → D-10 (job hunt; points or TOPIK4/KIIP waiver) → E-7 (hired) → F-2-7 (80+ points) → F-5-16 (3 years) — the classic student-to-PR ladder.
 - E-9/E-10/H-2 → E-7-4 (points, prerequisites above) → F-2-7/F-5. H-2 manufacturing 4+ years → F-5-14 directly.
 - Investor: incorporate + 100M FDI → D-8 → (grow) F-5-5/F-5-24, or F-2-7 via income points.
-- Marriage: F-6 → 2yr → F-2 → F-5; STEM grad students: K-STAR → F-2 → 3yr → F-5.
+- Marriage: F-6 → 2yr stay → F-5-2; STEM grad students: K-STAR → F-2 → 3yr → F-5.
 
 ### Practical FAQ knowledge
 - Extensions: apply from 4 months before expiry, and ALWAYS before expiry — overstay = fines, possible entry ban, damaged future applications. If expiry ≤2 weeks away, flag it as urgent and offer immediate attorney contact.

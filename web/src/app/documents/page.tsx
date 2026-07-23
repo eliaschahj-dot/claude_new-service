@@ -16,11 +16,21 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     const id = localStorage.getItem("kva_case_id");
-    if (!id) return;
-    fetch(`/api/cases/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setKase)
-      .catch(() => null);
+    (async () => {
+      if (id) {
+        const r = await fetch(`/api/cases/${id}`);
+        if (r.ok) { setKase(await r.json()); return; }
+      }
+      // localStorage에 없거나(다른 기기·로그인) 만료된 경우, 로그인 사용자의 최신 케이스로 대체
+      const list = await fetch("/api/cases");
+      if (list.ok) {
+        const cases: Case[] = await list.json();
+        if (cases[0]) {
+          localStorage.setItem("kva_case_id", cases[0].id);
+          setKase(cases[0]);
+        }
+      }
+    })().catch(() => null);
   }, []);
 
   if (!kase) {

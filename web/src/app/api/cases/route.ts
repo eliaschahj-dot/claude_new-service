@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCase } from "@/lib/store";
+import { createCase, listCasesByUser } from "@/lib/store";
 import { VISAS } from "@/lib/visa-db";
 import { auth } from "@/lib/auth";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "login_required" }, { status: 401 });
+  }
+  const cases = await listCasesByUser(session.user.email);
+  return NextResponse.json(cases);
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
