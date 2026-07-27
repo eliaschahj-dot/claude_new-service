@@ -128,6 +128,33 @@ export async function listCasesByUser(userId: string): Promise<Case[]> {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+// 관리자용 — 전체 케이스 최신순
+export async function listAllCases(): Promise<Case[]> {
+  if (hasDb()) {
+    const rows = await query<CaseRow>(`SELECT * FROM cases ORDER BY created_at DESC`);
+    return rows.map(rowToCase);
+  }
+  const db = await readFileDb();
+  return [...db.cases].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function updateStage(id: string, stage: Case["stage"]): Promise<Case | undefined> {
+  if (hasDb()) {
+    const rows = await query<CaseRow>(
+      `UPDATE cases SET stage = $2, updated_at = now() WHERE id = $1 RETURNING *`,
+      [id, stage],
+    );
+    return rows[0] ? rowToCase(rows[0]) : undefined;
+  }
+  const db = await readFileDb();
+  const c = db.cases.find((x) => x.id === id);
+  if (!c) return undefined;
+  c.stage = stage;
+  c.updatedAt = new Date().toISOString();
+  await writeFileDb(db);
+  return c;
+}
+
 export async function updateDocStatus(
   id: string,
   docId: string,

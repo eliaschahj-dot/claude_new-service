@@ -9,6 +9,7 @@ import {
   RiFolderOpenLine, RiFileList3Line, RiBankCardLine,
   RiGlobalLine, RiNotification3Line,
   RiShieldUserLine, RiFileTextLine, RiHomeOfficeLine, RiLogoutBoxRLine,
+  RiDashboardLine,
 } from "@remixicon/react";
 
 export default function ProfilePage() {
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const user = session?.user;
   const authed = status === "authenticated";
+  const isAdmin = !!(session as { isAdmin?: boolean } | null)?.isAdmin;
 
   // 비회원이 계정 귀속 메뉴(신청 내역·서류·결제)를 누르면 로그인으로 유도
   function gate(e: React.MouseEvent, next: string) {
@@ -58,6 +60,18 @@ export default function ProfilePage() {
 
         {!authed && (
           <Link className="btn btn-primary" href="/login">{ui("loginCta")}</Link>
+        )}
+
+        {isAdmin && (
+          <div className="card">
+            <ul className="menu-list">
+              <li>
+                <Link href="/admin">
+                  <span className="mi"><RiDashboardLine size={18} /></span>관리자 대시보드 (사무소)
+                </Link>
+              </li>
+            </ul>
+          </div>
         )}
 
         <div className="card">

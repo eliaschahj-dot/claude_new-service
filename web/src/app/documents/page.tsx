@@ -95,7 +95,7 @@ export default function DocumentsPage() {
     none: { label: ui("stNone"), cls: "badge-gray", action: ui("actUpload") },
     uploaded: { label: ui("stUploaded"), cls: "badge-amber", action: ui("actReupload") },
     approved: { label: ui("stApproved"), cls: "badge-green", action: ui("actView") },
-    rejected: { label: ui("stNone"), cls: "badge-red", action: ui("actUpload") },
+    rejected: { label: ui("stRejected"), cls: "badge-red", action: ui("actUpload") },
   }[s]);
 
   const icon = (d: DocRow) => d.common ? <RiPassportLine size={20} />

@@ -9,14 +9,16 @@ import type { L } from "@/lib/visa-db";
 import type { Case } from "@/lib/store";
 import { RiLock2Line, RiPassportLine, RiUserStarLine, RiCheckLine } from "@remixicon/react";
 
-// 데모 타임라인 — 실제로는 case_events 테이블에서 로드 (스텝 4~6 미구현)
-const STEPS: { st: "done" | "now" | ""; t: L; d: L }[] = [
-  { st: "done", t: { ko: "AI 상담 완료", en: "AI consultation done" }, d: { ko: "비자 유형 확정", en: "Visa type confirmed" } },
-  { st: "now", t: { ko: "서류 준비 및 검토", en: "Documents & review" }, d: { ko: "체크리스트 제출 진행 중", en: "Submitting your checklist" } },
-  { st: "", t: { ko: "행정사 최종 검토 · 결제", en: "Final review & payment" }, d: { ko: "대행 수수료 결제 후 접수가 진행됩니다", en: "Filing proceeds after the service fee is paid" } },
-  { st: "", t: { ko: "출입국 접수 (대행)", en: "Filed with immigration" }, d: { ko: "하이코리아 전자민원 또는 방문 접수", en: "Via HiKorea e-application or in person" } },
-  { st: "", t: { ko: "심사 결과 통보", en: "Decision" }, d: { ko: "승인 / 보완 / 불허 결과 알림", en: "Approved / supplement / denied notification" } },
+// 타임라인 — 케이스의 stage(관리자 대시보드에서 변경)에 따라 진행 위치가 반영된다
+const STEPS: { t: L; d: L }[] = [
+  { t: { ko: "AI 상담 완료", en: "AI consultation done" }, d: { ko: "비자 유형 확정", en: "Visa type confirmed" } },
+  { t: { ko: "서류 준비 및 검토", en: "Documents & review" }, d: { ko: "체크리스트 제출 진행 중", en: "Submitting your checklist" } },
+  { t: { ko: "행정사 최종 검토 · 결제", en: "Final review & payment" }, d: { ko: "대행 수수료 결제 후 접수가 진행됩니다", en: "Filing proceeds after the service fee is paid" } },
+  { t: { ko: "출입국 접수 (대행)", en: "Filed with immigration" }, d: { ko: "하이코리아 전자민원 또는 방문 접수", en: "Via HiKorea e-application or in person" } },
+  { t: { ko: "심사 결과 통보", en: "Decision" }, d: { ko: "승인 / 보완 / 불허 결과 알림", en: "Approved / supplement / denied notification" } },
 ];
+
+const STAGE_STEP: Record<string, number> = { consult: 0, docs: 1, review: 2, filed: 3, decided: 4 };
 
 export default function StatusPage() {
   const { ui, t } = useI18n();
@@ -103,12 +105,16 @@ export default function StatusPage() {
         <div className="card">
           <p className="section-title" style={{ marginBottom: 16 }}>{ui("stepsTitle")}</p>
           <ul className="timeline">
-            {STEPS.map((s, i) => (
-              <li className={s.st} key={i}>
-                <span className="node">{s.st === "done" ? <RiCheckLine size={14} /> : i + 1}</span>
-                <span className="t-info"><b>{t(s.t)}</b><span>{t(s.d)}</span></span>
-              </li>
-            ))}
+            {STEPS.map((s, i) => {
+              const active = STAGE_STEP[kase.stage] ?? 1;
+              const st = i < active ? "done" : i === active ? "now" : "";
+              return (
+                <li className={st} key={i}>
+                  <span className="node">{st === "done" ? <RiCheckLine size={14} /> : i + 1}</span>
+                  <span className="t-info"><b>{t(s.t)}</b><span>{t(s.d)}</span></span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

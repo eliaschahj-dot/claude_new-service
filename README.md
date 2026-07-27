@@ -37,6 +37,7 @@ AUTH_TRUST_HOST=true
 AUTH_GOOGLE_ID=...           # 구글 로그인 (아래 참고)
 AUTH_GOOGLE_SECRET=...
 DATABASE_URL=...             # PostgreSQL 연결 문자열 (아래 참고). 미설정 시 개발용 파일 저장(.data/db.json)으로 자동 폴백
+ADMIN_EMAILS=...             # 관리자(사무소) 이메일 화이트리스트, 쉼표 구분. 등록된 계정으로 로그인하면 /admin 대시보드 접근 가능
 ```
 
 ### 구글 로그인 설정

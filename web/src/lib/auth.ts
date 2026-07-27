@@ -10,8 +10,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   callbacks: {
     // 세션에 안정적인 사용자 식별자(email) 노출 — 케이스 귀속에 사용
+    // isAdmin: 클라이언트에서 관리자 메뉴 노출용 (실제 권한 검사는 서버 API에서 별도 수행)
     session({ session, token }) {
       if (session.user && token.email) session.user.email = token.email;
+      const admins = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+      (session as { isAdmin?: boolean }).isAdmin = !!token.email && admins.includes(token.email.toLowerCase());
       return session;
     },
   },
