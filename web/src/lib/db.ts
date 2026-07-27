@@ -75,7 +75,16 @@ async function ensureSchema(): Promise<void> {
            last_seen  timestamptz NOT NULL DEFAULT now()
          );
          CREATE INDEX IF NOT EXISTS visits_visitor_idx ON visits (visitor_id, last_seen DESC);
-         CREATE INDEX IF NOT EXISTS visits_last_seen_idx ON visits (last_seen DESC);`,
+         CREATE INDEX IF NOT EXISTS visits_last_seen_idx ON visits (last_seen DESC);
+         CREATE TABLE IF NOT EXISTS case_messages (
+           id           uuid PRIMARY KEY,
+           case_id      uuid NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
+           sender       text NOT NULL,
+           sender_email text,
+           body         text NOT NULL,
+           created_at   timestamptz NOT NULL DEFAULT now()
+         );
+         CREATE INDEX IF NOT EXISTS case_messages_case_idx ON case_messages (case_id, created_at);`,
       )
       .then(() => undefined)
       .catch((err) => {

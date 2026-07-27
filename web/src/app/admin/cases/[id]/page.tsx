@@ -7,7 +7,73 @@ import { useI18n } from "@/lib/i18n";
 import type { Case, DocStatus } from "@/lib/store";
 import type { CaseFile } from "@/lib/files";
 import type { ConversationMeta } from "@/lib/analytics";
-import { RiArrowLeftSLine, RiAttachment2, RiCheckLine, RiCloseLine, RiChat3Line } from "@remixicon/react";
+import type { CaseMessage } from "@/lib/messages";
+import { RiArrowLeftSLine, RiAttachment2, RiCheckLine, RiCloseLine, RiChat3Line, RiSendPlaneFill, RiMailLine } from "@remixicon/react";
+
+// 관리자 ↔ 고객 메시지 패널 (15초 폴링, 답장은 고객 이메일로도 발송됨)
+function AdminMessagePanel({ caseId }: { caseId: string }) {
+  const [msgs, setMsgs] = useState<CaseMessage[] | null>(null);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch(`/api/admin/cases/${caseId}/messages`)
+        .then(async (r) => { if (alive && r.ok) setMsgs(await r.json()); })
+        .catch(() => null);
+    load();
+    const iv = setInterval(load, 15_000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [caseId]);
+
+  async function send() {
+    const body = text.trim();
+    if (!body || sending) return;
+    setSending(true);
+    try {
+      const r = await fetch(`/api/admin/cases/${caseId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      if (r.ok) {
+        const m: CaseMessage = await r.json();
+        setMsgs((prev) => [...(prev ?? []), m]);
+        setText("");
+      } else alert(`전송 실패 (HTTP ${r.status})`);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="admin-card">
+      <h3><RiMailLine size={15} style={{ verticalAlign: "-2px" }} /> 고객 메시지</h3>
+      <div className="transcript" style={{ maxHeight: 320 }}>
+        {msgs?.length === 0 && <p className="muted" style={{ fontSize: ".82rem" }}>아직 메시지가 없습니다. 먼저 안내를 보내보세요 — 고객 이메일로도 알림이 갑니다.</p>}
+        {msgs?.map((m) => (
+          <div key={m.id} className={`tmsg ${m.sender === "admin" ? "u" : "a"}`}>
+            <span style={{ display: "block", fontSize: ".68rem", opacity: .75, marginBottom: 2 }}>
+              {m.sender === "admin" ? "사무소" : "고객"} · {new Date(m.createdAt).toLocaleString("ko-KR")}
+            </span>
+            {m.body}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <input value={text} onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder="고객에게 보낼 메시지… (이메일로도 알림)" disabled={sending}
+          style={{ flex: 1, border: "1px solid var(--line)", borderRadius: 999, padding: "10px 16px", fontSize: ".85rem", outline: "none", background: "var(--bg)" }} />
+        <button onClick={send} disabled={sending || !text.trim()} aria-label="send"
+          style={{ border: "none", background: "var(--primary)", color: "#fff", width: 40, height: 40, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: sending || !text.trim() ? .5 : 1 }}>
+          <RiSendPlaneFill size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface DocRow extends VisaDocument { id: string; common: boolean }
 
@@ -124,6 +190,8 @@ export default function AdminCasePage({ params }: { params: Promise<{ id: string
                 ))}
               </ul>
             </div>
+
+            <AdminMessagePanel caseId={kase.id} />
           </div>
 
           <div className="admin-card">

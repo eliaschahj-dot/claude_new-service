@@ -7,7 +7,74 @@ import { useI18n } from "@/lib/i18n";
 import { VISAS } from "@/lib/visa-db";
 import type { L } from "@/lib/visa-db";
 import type { Case } from "@/lib/store";
-import { RiLock2Line, RiPassportLine, RiUserStarLine, RiCheckLine } from "@remixicon/react";
+import { RiLock2Line, RiPassportLine, RiUserStarLine, RiCheckLine, RiSendPlaneFill } from "@remixicon/react";
+import type { CaseMessage } from "@/lib/messages";
+
+// 담당자 ↔ 신청인 메시지 스레드 (15초 폴링)
+function MessageThread({ caseId }: { caseId: string }) {
+  const { ui } = useI18n();
+  const [msgs, setMsgs] = useState<CaseMessage[] | null>(null);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch(`/api/cases/${caseId}/messages`)
+        .then(async (r) => { if (alive && r.ok) setMsgs(await r.json()); })
+        .catch(() => null);
+    load();
+    const iv = setInterval(load, 15_000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [caseId]);
+
+  async function send() {
+    const body = text.trim();
+    if (!body || sending) return;
+    setSending(true);
+    try {
+      const r = await fetch(`/api/cases/${caseId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      if (r.ok) {
+        const m: CaseMessage = await r.json();
+        setMsgs((prev) => [...(prev ?? []), m]);
+        setText("");
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="card">
+      <p className="section-title" style={{ marginBottom: 12 }}>{ui("msgThreadTitle")}</p>
+      <div className="transcript" style={{ maxHeight: 300 }}>
+        {msgs?.length === 0 && <p className="muted" style={{ fontSize: ".8rem" }}>{ui("msgEmptyThread")}</p>}
+        {msgs?.map((m) => (
+          <div key={m.id} className={`tmsg ${m.sender === "customer" ? "u" : "a"}`}>
+            <span style={{ display: "block", fontSize: ".68rem", opacity: .75, marginBottom: 2 }}>
+              {m.sender === "customer" ? ui("msgMeLabel") : ui("msgAgentLabel")} · {new Date(m.createdAt).toLocaleString()}
+            </span>
+            {m.body}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <input value={text} onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder={ui("msgPlaceholder")} disabled={sending}
+          style={{ flex: 1, border: "1px solid var(--line)", borderRadius: 999, padding: "10px 16px", fontSize: ".85rem", outline: "none", background: "var(--bg)" }} />
+        <button onClick={send} disabled={sending || !text.trim()} aria-label="send"
+          style={{ border: "none", background: "var(--primary)", color: "#fff", width: 40, height: 40, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: sending || !text.trim() ? .5 : 1 }}>
+          <RiSendPlaneFill size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // 타임라인 — 케이스의 stage(관리자 대시보드에서 변경)에 따라 진행 위치가 반영된다
 const STEPS: { t: L; d: L }[] = [
@@ -124,10 +191,9 @@ export default function StatusPage() {
             <b>{ui("agentName")}</b>
             <span>{ui("agentDesc")}</span>
           </span>
-          <button className="action" style={{ border: "1.5px solid var(--primary)", color: "var(--primary)", background: "none", borderRadius: 999, padding: "8px 14px", fontWeight: 700, fontSize: ".8rem" }}>
-            {ui("msgBtn")}
-          </button>
         </div>
+
+        <MessageThread caseId={kase.id} />
 
         <Link className="btn btn-primary" href="/documents">{ui("supplement")}</Link>
 

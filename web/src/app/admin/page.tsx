@@ -126,7 +126,7 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {!convs && <tr><td colSpan={5} className="muted">불러오는 중…</td></tr>}
-                {convs?.length === 0 && <tr><td colSpan={5} className="muted">저장된 상담이 없습니다. (DATABASE_URL 연결 후부터 저장됩니다)</td></tr>}
+                {convs?.length === 0 && <tr><td colSpan={5} className="muted">아직 저장된 상담이 없습니다. 이 기능 배포 이후의 새 상담부터 기록됩니다.</td></tr>}
                 {convs?.map((v) => (
                   <tr key={v.id} onClick={() => router.push(`/admin/conversations/${v.id}`)}>
                     <td className="mono">{fmtDt(v.updatedAt)}</td>

@@ -47,6 +47,49 @@ export function caseCreatedMail(c: { id: string; visaCode: string; appKey: strin
   };
 }
 
+// 고객 → 사무소 새 메시지 알림 (관리자에게)
+export function customerMessageMail(c: { id: string; visaCode: string; userId?: string }, body: string) {
+  const no = c.id.slice(0, 8).toUpperCase();
+  return {
+    subject: `[K-Visa] 고객 메시지 — ${c.visaCode} (${no})`,
+    html: `
+      <h2 style="margin:0 0 12px">고객이 메시지를 보냈습니다</h2>
+      <p style="font-size:14px;color:#666;margin:0 0 4px">${c.userId ?? "(미상)"} · 케이스 ${no}</p>
+      <blockquote style="margin:12px 0;padding:12px 16px;background:#f4f6fa;border-left:3px solid #1a56db;font-size:14px;white-space:pre-line">${body
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").slice(0, 1000)}</blockquote>
+      <p><a href="https://visa-korean.com/admin/cases/${c.id}">대시보드에서 답장하기 →</a></p>`,
+  };
+}
+
+// 사무소 → 고객 답장 알림 (고객 이메일로)
+export async function notifyCustomer(email: string, subject: string, html: string): Promise<void> {
+  try {
+    const t = transport();
+    if (!t || !email) return;
+    await t.sendMail({
+      from: process.env.MAIL_FROM || `"K-Visa Assist" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[mailer] notifyCustomer failed:", err);
+  }
+}
+
+export function adminReplyMail(c: { id: string; visaCode: string }, body: string) {
+  const no = c.id.slice(0, 8).toUpperCase();
+  return {
+    subject: `[K-Visa Assist] 담당 변호사·행정사의 새 메시지 (${no})`,
+    html: `
+      <h2 style="margin:0 0 12px">담당자가 메시지를 보냈습니다 / New message from your attorney & agent</h2>
+      <blockquote style="margin:12px 0;padding:12px 16px;background:#f4f6fa;border-left:3px solid #1a56db;font-size:14px;white-space:pre-line">${body
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").slice(0, 1000)}</blockquote>
+      <p style="font-size:14px"><a href="https://visa-korean.com/status">진행 상태 화면에서 확인·답장하기 →</a></p>
+      <p style="font-size:12px;color:#999">K-Visa Assist · ${c.visaCode} · Case ${no}</p>`,
+  };
+}
+
 export function fileUploadedMail(c: { id: string; visaCode: string; userId?: string }, f: { filename: string; size: number }) {
   const no = c.id.slice(0, 8).toUpperCase();
   return {

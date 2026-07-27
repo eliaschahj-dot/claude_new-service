@@ -171,7 +171,9 @@ export default function ChatPage() {
         lang,
         messages: turns,
       });
-      fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true })
+      // keepalive 요청은 본문 64KB 제한 — 심층 상담은 이를 넘을 수 있어 큰 대화는 일반 fetch로 보낸다
+      const keepalive = body.length < 60_000;
+      fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive })
         .then(async (r) => {
           if (r.ok) {
             const { id } = await r.json();
