@@ -567,3 +567,58 @@ main {
 .doc-item .ico, .case-summary .dot, .agent-card .photo { display: inline-flex; align-items: center; justify-content: center; }
 .profile-head .avatar-lg { display: inline-flex; align-items: center; justify-content: center; color: var(--primary); }
 .timeline .node svg { display: block; }
+
+/* ---------- 관리자 데스크톱 레이아웃 ---------- */
+.admin-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 28px 60px;
+  background: var(--bg);
+}
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+.admin-header h1 { font-size: 1.15rem; font-weight: 800; }
+.admin-header .crumb { color: var(--ink-soft); font-size: .85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 2px; }
+.admin-header .crumb:hover { color: var(--primary); }
+.admin-header .who { margin-left: auto; font-size: .8rem; color: var(--ink-soft); }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 26px; }
+.stat-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.stat-card .k { font-size: .76rem; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+.stat-card .v { font-size: 1.55rem; font-weight: 800; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.stat-card .v small { font-size: .8rem; font-weight: 600; color: var(--ink-soft); }
+
+.admin-section { margin-bottom: 30px; }
+.admin-section > h2 { font-size: .95rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+.admin-table-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.admin-table th {
+  text-align: left; padding: 12px 16px; color: var(--ink-soft); font-size: .74rem;
+  border-bottom: 1px solid var(--line); white-space: nowrap; font-weight: 700;
+}
+.admin-table td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr { cursor: pointer; }
+.admin-table tbody tr:hover { background: #f4f7fd; }
+.admin-table .mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-table .ellip { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.admin-cols { display: grid; grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .admin-cols { grid-template-columns: 1fr; } }
+.admin-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.admin-card h3 { font-size: .9rem; font-weight: 800; margin-bottom: 14px; }
+.admin-kv { font-size: .85rem; line-height: 1.9; }
+.admin-kv b { display: inline-block; min-width: 88px; color: var(--ink-soft); font-weight: 600; }
+
+.transcript { display: flex; flex-direction: column; gap: 10px; max-height: 560px; overflow-y: auto; padding-right: 6px; }
+.transcript .tmsg { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: .85rem; line-height: 1.6; white-space: pre-line; }
+.transcript .tmsg.u { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+.transcript .tmsg.a { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }

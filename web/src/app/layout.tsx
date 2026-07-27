@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { SessionProvider } from "next-auth/react";
 import { LangProvider } from "@/lib/i18n";
+import { Frame } from "@/components/Frame";
+import { Track } from "@/components/Track";
 import "./globals.css";
 
 const SITE_URL = "https://visa-korean.com";
@@ -49,7 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <SessionProvider>
           <LangProvider>
-            <div className="phone">{children}</div>
+            <Track />
+            <Frame>{children}</Frame>
           </LangProvider>
         </SessionProvider>
       </body>

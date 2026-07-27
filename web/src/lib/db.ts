@@ -51,7 +51,31 @@ async function ensureSchema(): Promise<void> {
            data        bytea NOT NULL,
            uploaded_at timestamptz NOT NULL DEFAULT now()
          );
-         CREATE INDEX IF NOT EXISTS case_files_case_id_idx ON case_files (case_id);`,
+         CREATE INDEX IF NOT EXISTS case_files_case_id_idx ON case_files (case_id);
+         CREATE TABLE IF NOT EXISTS conversations (
+           id         uuid PRIMARY KEY,
+           visitor_id text,
+           user_id    text,
+           lang       text,
+           messages   jsonb NOT NULL DEFAULT '[]'::jsonb,
+           msg_count  integer NOT NULL DEFAULT 0,
+           created_at timestamptz NOT NULL DEFAULT now(),
+           updated_at timestamptz NOT NULL DEFAULT now()
+         );
+         CREATE INDEX IF NOT EXISTS conversations_updated_idx ON conversations (updated_at DESC);
+         CREATE INDEX IF NOT EXISTS conversations_user_idx ON conversations (user_id);
+         CREATE TABLE IF NOT EXISTS visits (
+           id         uuid PRIMARY KEY,
+           visitor_id text NOT NULL,
+           user_id    text,
+           ua         text,
+           lang       text,
+           pageviews  integer NOT NULL DEFAULT 1,
+           first_seen timestamptz NOT NULL DEFAULT now(),
+           last_seen  timestamptz NOT NULL DEFAULT now()
+         );
+         CREATE INDEX IF NOT EXISTS visits_visitor_idx ON visits (visitor_id, last_seen DESC);
+         CREATE INDEX IF NOT EXISTS visits_last_seen_idx ON visits (last_seen DESC);`,
       )
       .then(() => undefined)
       .catch((err) => {

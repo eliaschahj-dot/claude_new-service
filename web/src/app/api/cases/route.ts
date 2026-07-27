@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCase, listCasesByUser } from "@/lib/store";
 import { VISAS } from "@/lib/visa-db";
 import { auth } from "@/lib/auth";
+import { notifyAdmins, caseCreatedMail } from "@/lib/mailer";
 
 export async function GET() {
   const session = await auth();
@@ -31,5 +32,7 @@ export async function POST(req: NextRequest) {
     lang: body.lang,
     userId: session.user.email,
   });
+  const mail = caseCreatedMail({ id: c.id, visaCode: c.visaCode, appKey: c.appKey, userId: c.userId });
+  await notifyAdmins(mail.subject, mail.html);
   return NextResponse.json(c, { status: 201 });
 }

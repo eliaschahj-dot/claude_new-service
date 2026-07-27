@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadOwnCase } from "@/lib/own-case";
 import { updateDocStatus } from "@/lib/store";
 import { saveFile, listFiles, MAX_FILE_BYTES, isAllowedType } from "@/lib/files";
+import { notifyAdmins, fileUploadedMail } from "@/lib/mailer";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -45,5 +46,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     data,
   });
   const updated = await updateDocStatus(id, docId, "uploaded");
+  const c = result.case;
+  const mail = fileUploadedMail({ id, visaCode: c.visaCode, userId: c.userId }, { filename: meta.filename, size: meta.size });
+  await notifyAdmins(mail.subject, mail.html);
   return NextResponse.json({ file: meta, case: updated });
 }

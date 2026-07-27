@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS, COMMON_DOCS, DB_UPDATED, L } from "@/lib/visa-db";
+import { getVisitorId } from "@/lib/visitor";
 import { RiRobot2Fill, RiSendPlaneFill, RiLoader4Line, RiLock2Line } from "@remixicon/react";
 
 type Reply = { label: L; send: L };
@@ -120,14 +121,13 @@ export default function ChatPage() {
       });
       if (!res.ok) throw new Error(`chat api ${res.status}`);
       const data: { reply: string; recommendation?: { visaCode: string; applicationKey: string } } = await res.json();
-      setMsgs((m) => {
-        const out = [...m];
-        if (data.reply) out.push({ kind: "bot", text: data.reply });
-        if (data.recommendation) {
-          out.push({ kind: "reco", code: data.recommendation.visaCode, appKey: data.recommendation.applicationKey });
-        }
-        return out;
-      });
+      const out: Msg[] = [...withUser];
+      if (data.reply) out.push({ kind: "bot", text: data.reply });
+      if (data.recommendation) {
+        out.push({ kind: "reco", code: data.recommendation.visaCode, appKey: data.recommendation.applicationKey });
+      }
+      setMsgs(out);
+      syncConversation(out);
       if (data.recommendation) {
         setPendingReco([data.recommendation.visaCode, data.recommendation.applicationKey]);
       }
@@ -157,6 +157,30 @@ export default function ChatPage() {
       try { localStorage.setItem(CHAT_STORE_KEY, JSON.stringify({ msgs })); } catch { /* 저장 공간 부족 등은 무시 */ }
     }
   }, [msgs]);
+
+  // 상담 내용을 서버에도 저장(관리자 모니터링·케이스 검토용) — 실패해도 UX에는 영향 없음
+  function syncConversation(list: Msg[]) {
+    try {
+      const turns = list
+        .filter((m) => m.kind !== "reco")
+        .map((m) => ({ role: m.kind === "bot" ? "assistant" : "user", content: render((m as { text: L | string }).text) }));
+      if (turns.length < 2) return;
+      const body = JSON.stringify({
+        conversationId: localStorage.getItem("kva_conv_id") || undefined,
+        visitorId: getVisitorId(),
+        lang,
+        messages: turns,
+      });
+      fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true })
+        .then(async (r) => {
+          if (r.ok) {
+            const { id } = await r.json();
+            if (id) localStorage.setItem("kva_conv_id", id);
+          }
+        })
+        .catch(() => null);
+    } catch { /* 무시 */ }
+  }
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, replies]);
 
   return (

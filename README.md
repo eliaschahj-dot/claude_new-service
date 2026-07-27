@@ -38,7 +38,15 @@ AUTH_GOOGLE_ID=...           # 구글 로그인 (아래 참고)
 AUTH_GOOGLE_SECRET=...
 DATABASE_URL=...             # PostgreSQL 연결 문자열 (아래 참고). 미설정 시 개발용 파일 저장(.data/db.json)으로 자동 폴백
 ADMIN_EMAILS=...             # 관리자(사무소) 이메일 화이트리스트, 쉼표 구분. 등록된 계정으로 로그인하면 /admin 대시보드 접근 가능
+SMTP_USER=...                # (선택) 이메일 알림 발신 계정 — Gmail 주소. 미설정 시 알림 발송 건너뜀
+SMTP_PASS=...                # (선택) Gmail '앱 비밀번호' (구글 계정 → 보안 → 2단계 인증 → 앱 비밀번호에서 생성)
+# SMTP_HOST/SMTP_PORT: 기본 smtp.gmail.com:465 (타 SMTP 사용 시만 지정), MAIL_FROM: 발신 표시 이름
 ```
+
+새 신청 케이스 생성·서류 업로드 시 `ADMIN_EMAILS`의 모든 주소로 알림 메일이 발송됩니다
+(SMTP_USER/SMTP_PASS 설정 시). 관리자 대시보드(`/admin`)는 데스크톱 화면 기준이며
+방문자·체류시간·상담 기록 모니터링을 포함합니다. 상담 대화와 방문 통계는 PostgreSQL
+연결 시에만 저장됩니다.
 
 ### 구글 로그인 설정
 
