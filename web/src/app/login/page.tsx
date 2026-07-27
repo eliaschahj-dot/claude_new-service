@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { useEffect } from "react";
 import { Appbar, Tabbar } from "@/components/Chrome";
+import { Logo } from "@/components/Logo";
 import { useI18n } from "@/lib/i18n";
 
 function GoogleMark() {
@@ -33,7 +34,7 @@ function LoginInner() {
       <Appbar titleKey="loginTitle" />
       <main className="home-main">
         <div className="card login-card">
-          <span className="login-logo">🛂</span>
+          <span className="login-logo"><Logo size={52} /></span>
           <h2>K-Visa Assist</h2>
           <p className="muted">{ui("loginDesc")}</p>
           <button className="btn google-btn" onClick={() => signIn("google", { redirectTo: next })}>

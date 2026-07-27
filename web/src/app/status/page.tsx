@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS } from "@/lib/visa-db";
 import type { L } from "@/lib/visa-db";
 import type { Case } from "@/lib/store";
+import { RiLock2Line, RiPassportLine, RiUserStarLine, RiCheckLine } from "@remixicon/react";
 
 // 데모 타임라인 — 실제로는 case_events 테이블에서 로드 (스텝 4~6 미구현)
 const STEPS: { st: "done" | "now" | ""; t: L; d: L }[] = [
@@ -18,6 +20,7 @@ const STEPS: { st: "done" | "now" | ""; t: L; d: L }[] = [
 
 export default function StatusPage() {
   const { ui, t } = useI18n();
+  const { status: authStatus } = useSession();
   const [kase, setKase] = useState<Case | null | undefined>(undefined); // undefined = loading
 
   useEffect(() => {
@@ -39,6 +42,24 @@ export default function StatusPage() {
       setKase(null);
     })().catch(() => setKase(null));
   }, []);
+
+  // 비회원: 로그인 안내 페이지
+  if (authStatus === "unauthenticated") {
+    return (
+      <>
+        <Appbar titleKey="statusTitle" />
+        <main>
+          <div className="card login-gate">
+            <span className="gate-ico"><RiLock2Line size={30} /></span>
+            <b>{ui("guestStatusTitle")}</b>
+            <p className="muted">{ui("guestGateSub")}</p>
+            <Link className="btn btn-primary" href="/login?next=/status">{ui("loginCta")}</Link>
+          </div>
+        </main>
+        <Tabbar />
+      </>
+    );
+  }
 
   if (kase === undefined) {
     return (
@@ -71,7 +92,7 @@ export default function StatusPage() {
       <Appbar titleKey="statusTitle" />
       <main>
         <div className="card case-summary">
-          <span className="dot">🛂</span>
+          <span className="dot"><RiPassportLine size={22} /></span>
           <span className="info">
             <b>{kase.visaCode} {t(visa.name)} — {t(app.label)}</b>
             <span className="muted">{ui("applyNo")}: {kase.id.slice(0, 8).toUpperCase()}</span>
@@ -84,7 +105,7 @@ export default function StatusPage() {
           <ul className="timeline">
             {STEPS.map((s, i) => (
               <li className={s.st} key={i}>
-                <span className="node">{s.st === "done" ? "✓" : i + 1}</span>
+                <span className="node">{s.st === "done" ? <RiCheckLine size={14} /> : i + 1}</span>
                 <span className="t-info"><b>{t(s.t)}</b><span>{t(s.d)}</span></span>
               </li>
             ))}
@@ -92,7 +113,7 @@ export default function StatusPage() {
         </div>
 
         <div className="card agent-card">
-          <span className="photo">👤</span>
+          <span className="photo"><RiUserStarLine size={22} /></span>
           <span className="info">
             <b>{ui("agentName")}</b>
             <span>{ui("agentDesc")}</span>

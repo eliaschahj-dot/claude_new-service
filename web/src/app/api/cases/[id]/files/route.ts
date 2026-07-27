@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadOwnCase } from "@/lib/own-case";
 import { updateDocStatus } from "@/lib/store";
-import { saveFile, listFiles, MAX_FILE_BYTES, ALLOWED_MIME } from "@/lib/files";
+import { saveFile, listFiles, MAX_FILE_BYTES, isAllowedType } from "@/lib/files";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       { status: 413 },
     );
   }
-  if (!ALLOWED_MIME.has(file.type)) {
+  if (!isAllowedType(file.type, file.name)) {
     return NextResponse.json(
       { error: "only PDF or image files (jpg, png, webp, heic) are accepted" },
       { status: 415 },

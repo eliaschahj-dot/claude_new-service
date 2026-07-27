@@ -8,8 +8,13 @@ import { useSession } from "next-auth/react";
 import { Appbar, Tabbar } from "@/components/Chrome";
 import { useI18n } from "@/lib/i18n";
 import { VISAS, COMMON_DOCS, DB_UPDATED, L } from "@/lib/visa-db";
+import { RiRobot2Fill, RiSendPlaneFill, RiLoader4Line, RiLock2Line } from "@remixicon/react";
 
 type Reply = { label: L; send: L };
+
+// 비회원 무료 체험 한도(사용자 발화 수) — 초과 시 로그인 유도, 대화는 localStorage에 보존되어 로그인 후 이어진다
+const GUEST_FREE_TURNS = 4;
+const CHAT_STORE_KEY = "kva_chat_v1";
 
 const GREETING: L = {
   ko: "안녕하세요! 👋 K-Visa Assist AI 상담원입니다.\n비자 상담을 시작할게요. 한국에 오시는(계시는) 목적이 무엇인가요?\n아래에서 고르거나, 상황을 직접 입력해 주세요.",
@@ -17,11 +22,11 @@ const GREETING: L = {
 };
 
 const START_REPLIES: Reply[] = [
-  { label: { ko: "🎓 유학", en: "🎓 Study" }, send: { ko: "유학 비자를 알아보고 싶어요.", en: "I want to study in Korea — which visa do I need?" } },
-  { label: { ko: "💼 취업 · 구직", en: "💼 Work" }, send: { ko: "한국에서 일하려고 하는데 어떤 비자가 필요한가요?", en: "I want to work in Korea — which visa do I need?" } },
-  { label: { ko: "🔄 체류 연장", en: "🔄 Extend my stay" }, send: { ko: "지금 비자 체류기간을 연장하고 싶어요.", en: "I need to extend my current stay." } },
-  { label: { ko: "💍 결혼 비자", en: "💍 Marriage visa" }, send: { ko: "한국인과 결혼해서 결혼 비자를 알아보고 있어요.", en: "I'm marrying a Korean citizen and looking into the marriage visa." } },
-  { label: { ko: "🏠 영주권 (F-5)", en: "🏠 Permanent residency" }, send: { ko: "영주권(F-5)을 받고 싶어요.", en: "I want permanent residency (F-5)." } },
+  { label: { ko: "유학", en: "Study" }, send: { ko: "유학 비자를 알아보고 싶어요.", en: "I want to study in Korea — which visa do I need?" } },
+  { label: { ko: "취업 · 구직", en: "Work" }, send: { ko: "한국에서 일하려고 하는데 어떤 비자가 필요한가요?", en: "I want to work in Korea — which visa do I need?" } },
+  { label: { ko: "체류 연장", en: "Extend my stay" }, send: { ko: "지금 비자 체류기간을 연장하고 싶어요.", en: "I need to extend my current stay." } },
+  { label: { ko: "결혼 비자", en: "Marriage visa" }, send: { ko: "한국인과 결혼해서 결혼 비자를 알아보고 있어요.", en: "I'm marrying a Korean citizen and looking into the marriage visa." } },
+  { label: { ko: "영주권 (F-5)", en: "Permanent residency" }, send: { ko: "영주권(F-5)을 받고 싶어요.", en: "I want permanent residency (F-5)." } },
 ];
 
 type Msg =
@@ -45,6 +50,10 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const render = (v: L | string) => (typeof v === "string" ? v : t(v));
+
+  // 비회원 체험 한도: 사용자 발화 수 기준. 로그인하면 즉시 해제되고 대화는 그대로 이어진다.
+  const userTurns = msgs.filter((m) => m.kind === "user").length;
+  const gated = sessionStatus !== "authenticated" && userTurns >= GUEST_FREE_TURNS;
 
   // 화면 메시지 → LLM 대화 이력 (API는 user 턴으로 시작해야 하므로 합성 첫 턴 삽입)
   function toTurns(list: Msg[]) {
@@ -98,7 +107,7 @@ export default function ChatPage() {
   }
 
   async function sendMessage(v: string) {
-    if (loading) return;
+    if (loading || gated) return;
     const withUser: Msg[] = [...msgs, { kind: "user", text: v }];
     setMsgs(withUser);
     setReplies([]);
@@ -129,10 +138,25 @@ export default function ChatPage() {
     }
   }
 
+  // 대화를 localStorage에 보존 — 비회원이 로그인하고 돌아와도(리다이렉트 포함) 이력이 그대로 이어진다
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || "null");
+      if (Array.isArray(saved?.msgs) && saved.msgs.length > 0) {
+        setMsgs(saved.msgs);
+        if (saved.msgs.length <= 1) setReplies(START_REPLIES);
+        return;
+      }
+    } catch { /* 손상된 저장값은 무시하고 새로 시작 */ }
     setMsgs([{ kind: "bot", text: GREETING }]);
     setReplies(START_REPLIES);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (msgs.length > 0) {
+      try { localStorage.setItem(CHAT_STORE_KEY, JSON.stringify({ msgs })); } catch { /* 저장 공간 부족 등은 무시 */ }
+    }
+  }, [msgs]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, replies]);
 
   return (
@@ -165,11 +189,22 @@ export default function ChatPage() {
           }
           return (
             <div className={m.kind === "user" ? "msg user" : "msg"} key={i}>
-              {m.kind === "bot" && <span className="avatar">🤖</span>}
+              {m.kind === "bot" && <span className="avatar"><RiRobot2Fill size={17} /></span>}
               <span className="bubble" style={{ whiteSpace: "pre-line" }}>{render(m.text)}</span>
             </div>
           );
         })}
+        {gated && (
+          <div className="chat-gate">
+            <span style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <RiLock2Line size={18} style={{ flexShrink: 0, marginTop: 2, color: "var(--primary)" }} />
+              <span>{ui("guestGateChat")}</span>
+            </span>
+            <button className="btn btn-primary" onClick={() => router.push("/login?next=/chat")}>
+              {ui("guestGateBtn")}
+            </button>
+          </div>
+        )}
         {pendingReco && (
           <div className="quick-replies">
             <button onClick={startApplication}>{ui("startBtn")}</button>
@@ -188,17 +223,20 @@ export default function ChatPage() {
         )}
         {loading && (
           <div className="msg">
-            <span className="avatar">🤖</span>
+            <span className="avatar"><RiRobot2Fill size={17} /></span>
             <span className="bubble typing">● ● ●</span>
           </div>
         )}
         <div ref={bottomRef} />
       </main>
-      <div className="chat-input">
+      <div className={loading ? "chat-input waiting" : "chat-input"}>
         <input value={text} onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendFree()}
-          placeholder={ui("chatPlaceholder")} autoComplete="off" disabled={loading} />
-        <button onClick={sendFree} aria-label="send" disabled={loading}>➤</button>
+          placeholder={loading ? ui("aiTyping") : gated ? ui("guestGatePlaceholder") : ui("chatPlaceholder")}
+          autoComplete="off" disabled={loading || gated} />
+        <button onClick={sendFree} aria-label="send" disabled={loading || gated}>
+          {loading ? <RiLoader4Line className="spin" size={20} /> : gated ? <RiLock2Line size={18} /> : <RiSendPlaneFill size={18} />}
+        </button>
       </div>
       <Tabbar />
     </>
