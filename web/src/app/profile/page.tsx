@@ -92,7 +92,7 @@ export default function ProfilePage() {
               </a>
             </li>
             <li>
-              <a href="#" onClick={(e) => { e.preventDefault(); setLang(lang === "ko" ? "en" : "ko"); }}>
+              <a href="#" onClick={(e) => { e.preventDefault(); setLang(lang === "ko" ? "en" : lang === "en" ? "zh" : "ko"); }}>
                 <span className="mi"><RiGlobalLine size={18} /></span>{ui("mLang")}
               </a>
             </li>
@@ -106,8 +106,8 @@ export default function ProfilePage() {
 
         <div className="card">
           <ul className="menu-list">
-            <li><a href="#" onClick={(e) => e.preventDefault()}><span className="mi"><RiShieldUserLine size={18} /></span>{ui("mPrivacy")}</a></li>
-            <li><a href="#" onClick={(e) => e.preventDefault()}><span className="mi"><RiFileTextLine size={18} /></span>{ui("mTerms")}</a></li>
+            <li><Link href="/privacy"><span className="mi"><RiShieldUserLine size={18} /></span>{ui("mPrivacy")}</Link></li>
+            <li><Link href="/terms"><span className="mi"><RiFileTextLine size={18} /></span>{ui("mTerms")}</Link></li>
             <li><a href="#" onClick={(e) => e.preventDefault()}><span className="mi"><RiHomeOfficeLine size={18} /></span>{ui("mOffice")}</a></li>
             {authed && (
               <li>
