@@ -1,10 +1,27 @@
-// 인증 — Google OAuth 단일 프로바이더 (이메일/비밀번호 가입 없음)
+// 인증 — Google OAuth + 이메일 인증코드(OTP, 구글 차단 지역용). 비밀번호 가입 없음.
 // 자격증명은 .env.local 의 AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / AUTH_SECRET 사용
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
+import { verifyLoginCode, isValidEmail } from "./otp";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google,
+    // 이메일 인증코드 로그인 — 중국 등 구글 접속 불가 지역용 (JWT 세션이라 어댑터 불필요)
+    Credentials({
+      id: "email-otp",
+      name: "Email code",
+      credentials: { email: {}, code: {} },
+      async authorize(creds) {
+        const email = String(creds?.email ?? "").toLowerCase().trim();
+        const code = String(creds?.code ?? "").trim();
+        if (!isValidEmail(email) || !/^\d{6}$/.test(code)) return null;
+        const ok = await verifyLoginCode(email, code);
+        return ok ? { id: email, email, name: email.split("@")[0] } : null;
+      },
+    }),
+  ],
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   trustHost: true,

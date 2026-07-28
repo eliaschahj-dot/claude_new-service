@@ -80,7 +80,7 @@ DATABASE_URL=postgresql://user:password@ep-xxxx.region.neon.tech/dbname?sslmode=
 케이스 조회·수정 API(`/api/cases`)는 로그인 세션의 이메일과 케이스 소유자가 일치하는
 경우에만 접근을 허용합니다(다른 사용자의 케이스는 404로 응답).
 
-- 전 화면(홈/챗봇/비자정보/서류/상태/MY) React 이관 완료, KO/EN 지원
+- 전 화면(홈/챗봇/비자정보/서류/상태/MY) React 이관 완료, KO/EN/ZH(중국어 간체) 지원
 - API: `POST /api/cases` (케이스 생성), `GET/PATCH /api/cases/:id` (조회/서류 상태 갱신)
 - 저장소는 개발용 파일 스토어(`.data/db.json`) — PostgreSQL 교체 예정
 

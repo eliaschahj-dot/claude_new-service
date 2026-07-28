@@ -84,7 +84,14 @@ async function ensureSchema(): Promise<void> {
            body         text NOT NULL,
            created_at   timestamptz NOT NULL DEFAULT now()
          );
-         CREATE INDEX IF NOT EXISTS case_messages_case_idx ON case_messages (case_id, created_at);`,
+         CREATE INDEX IF NOT EXISTS case_messages_case_idx ON case_messages (case_id, created_at);
+         CREATE TABLE IF NOT EXISTS login_codes (
+           email      text PRIMARY KEY,
+           code_hash  text NOT NULL,
+           attempts   integer NOT NULL DEFAULT 0,
+           expires_at timestamptz NOT NULL,
+           created_at timestamptz NOT NULL DEFAULT now()
+         );`,
       )
       .then(() => undefined)
       .catch((err) => {

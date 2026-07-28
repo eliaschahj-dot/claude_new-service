@@ -20,14 +20,15 @@ const CHAT_STORE_KEY = "kva_chat_v1";
 const GREETING: L = {
   ko: "안녕하세요! 👋 K-Visa Assist AI 상담원입니다.\n비자 상담을 시작할게요. 한국에 오시는(계시는) 목적이 무엇인가요?\n아래에서 고르거나, 상황을 직접 입력해 주세요.",
   en: "Hello! 👋 I'm the K-Visa Assist AI consultant.\nLet's find your visa. What brings you to Korea?\nPick below, or just describe your situation.",
+  zh: "您好！👋 我是K-Visa Assist的AI签证顾问。\n我们开始签证咨询吧。您来韩国（或在韩国）的目的是什么？\n可以点击下方按钮，也可以直接输入您的情况。",
 };
 
 const START_REPLIES: Reply[] = [
-  { label: { ko: "유학", en: "Study" }, send: { ko: "유학 비자를 알아보고 싶어요.", en: "I want to study in Korea — which visa do I need?" } },
-  { label: { ko: "취업 · 구직", en: "Work" }, send: { ko: "한국에서 일하려고 하는데 어떤 비자가 필요한가요?", en: "I want to work in Korea — which visa do I need?" } },
-  { label: { ko: "체류 연장", en: "Extend my stay" }, send: { ko: "지금 비자 체류기간을 연장하고 싶어요.", en: "I need to extend my current stay." } },
-  { label: { ko: "결혼 비자", en: "Marriage visa" }, send: { ko: "한국인과 결혼해서 결혼 비자를 알아보고 있어요.", en: "I'm marrying a Korean citizen and looking into the marriage visa." } },
-  { label: { ko: "영주권 (F-5)", en: "Permanent residency" }, send: { ko: "영주권(F-5)을 받고 싶어요.", en: "I want permanent residency (F-5)." } },
+  { label: { ko: "유학", en: "Study", zh: "留学" }, send: { ko: "유학 비자를 알아보고 싶어요.", en: "I want to study in Korea — which visa do I need?", zh: "我想了解留学签证。" } },
+  { label: { ko: "취업 · 구직", en: "Work", zh: "就业·求职" }, send: { ko: "한국에서 일하려고 하는데 어떤 비자가 필요한가요?", en: "I want to work in Korea — which visa do I need?", zh: "我想在韩国工作，需要什么签证？" } },
+  { label: { ko: "체류 연장", en: "Extend my stay", zh: "延长停留" }, send: { ko: "지금 비자 체류기간을 연장하고 싶어요.", en: "I need to extend my current stay.", zh: "我想延长现在的签证停留期限。" } },
+  { label: { ko: "결혼 비자", en: "Marriage visa", zh: "结婚签证" }, send: { ko: "한국인과 결혼해서 결혼 비자를 알아보고 있어요.", en: "I'm marrying a Korean citizen and looking into the marriage visa.", zh: "我要和韩国人结婚，想了解结婚签证。" } },
+  { label: { ko: "영주권 (F-5)", en: "Permanent residency", zh: "永住权 (F-5)" }, send: { ko: "영주권(F-5)을 받고 싶어요.", en: "I want permanent residency (F-5).", zh: "我想申请永住权（F-5）。" } },
 ];
 
 type Msg =
@@ -37,6 +38,7 @@ type Msg =
 const ERR_MSG: L = {
   ko: "죄송해요, 지금 응답을 받지 못했어요. 잠시 후 다시 시도해 주세요. 급하시면 아래 버튼으로 담당자 상담을 연결해 드릴게요.",
   en: "Sorry, I couldn't get a response just now. Please try again in a moment, or use the buttons below to reach our team.",
+  zh: "抱歉，暂时未能收到回复。请稍后重试，或通过下方按钮联系我们的负责人。",
 };
 
 export default function ChatPage() {

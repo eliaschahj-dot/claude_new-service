@@ -1,7 +1,8 @@
 // K-Visa Assist 지식베이스 (P0 비자 4종) — app/data/visas.js 의 TS 이관본
 // 원본 데이터 시트: docs/VISA_DATA_SHEET.md (대표 1차 검수 완료 2026-07-16)
 
-export type L = { ko: string; en: string };
+// zh(중국어 간체)는 선택 — 값이 없으면 t()가 영어로 폴백한다
+export type L = { ko: string; en: string; zh?: string };
 
 export interface VisaDocument {
   name: L;

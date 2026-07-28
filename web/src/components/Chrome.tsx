@@ -1,8 +1,9 @@
 "use client";
-// 공통 크롬: 앱바(언어 토글 포함) + 하단 탭바 — 아이콘은 Remix Icon(@remixicon/react)
+// 공통 크롬: 앱바(언어 선택 포함) + 하단 탭바 — 아이콘은 Remix Icon(@remixicon/react)
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { useI18n, UIKey } from "@/lib/i18n";
+import { useI18n, UIKey, Lang } from "@/lib/i18n";
 import { Logo } from "./Logo";
 import {
   RiArrowLeftSLine,
@@ -15,8 +16,15 @@ import {
 } from "@remixicon/react";
 import type { RemixiconComponentType } from "@remixicon/react";
 
+const LANGS: { code: Lang; label: string }[] = [
+  { code: "ko", label: "한국어" },
+  { code: "en", label: "English" },
+  { code: "zh", label: "中文" },
+];
+
 export function Appbar({ titleKey, home = false }: { titleKey?: UIKey; home?: boolean }) {
   const { ui, lang, setLang } = useI18n();
+  const [open, setOpen] = useState(false);
   return (
     <header className="appbar">
       {home ? (
@@ -27,9 +35,21 @@ export function Appbar({ titleKey, home = false }: { titleKey?: UIKey; home?: bo
           <span className="title">{titleKey ? ui(titleKey) : ""}</span>
         </>
       )}
-      <button className="lang" onClick={() => setLang(lang === "ko" ? "en" : "ko")}>
-        <RiGlobalLine size={15} /> {ui("langLabel")}
-      </button>
+      <span className="lang-wrap">
+        <button className="lang" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+          <RiGlobalLine size={15} /> {ui("langLabel")}
+        </button>
+        {open && (
+          <span className="lang-menu">
+            {LANGS.map((l) => (
+              <button key={l.code} className={l.code === lang ? "on" : ""}
+                onClick={() => { setLang(l.code); setOpen(false); }}>
+                {l.label}
+              </button>
+            ))}
+          </span>
+        )}
+      </span>
     </header>
   );
 }

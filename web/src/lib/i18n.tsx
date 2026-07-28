@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import type { L } from "./visa-db";
 
-export type Lang = "ko" | "en";
+export type Lang = "ko" | "en" | "zh";
 
 const UI_DICT = {
   ko: {
@@ -71,6 +71,15 @@ const UI_DICT = {
     basisNote: "출처: 하이코리아 등 (참고용, 최종 견적은 담당 변호사·행정사 확인)",
     startBtn: "신청 시작하기", otherBtn: "다른 비자 보기", free: "무료",
     freeReply: "입력해 주셔서 감사합니다! 데모 버전에서는 버튼 선택으로 상담이 진행됩니다.\n실제 서비스에서는 AI가 자유 입력을 이해하고 하이코리아 근거와 함께 답변합니다. 😊",
+    otpTitle: "이메일 인증코드 로그인",
+    otpDesc: "구글을 사용할 수 없는 지역(중국 등)에서는 이메일 인증코드로 로그인하세요.",
+    otpEmailPh: "이메일 주소를 입력하세요",
+    otpSend: "인증코드 받기", otpSent: "인증코드를 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요. 10분간 유효합니다.",
+    otpCodePh: "6자리 인증코드 입력",
+    otpVerify: "확인하고 로그인",
+    otpFail: "인증코드가 올바르지 않거나 만료되었습니다. 다시 시도해 주세요.",
+    otpSendFail: "발송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    orDivider: "또는",
   },
   en: {
     tabHome: "Home", tabChat: "Chat", tabDocs: "Docs", tabStatus: "Status", tabMy: "MY",
@@ -136,6 +145,89 @@ const UI_DICT = {
     basisNote: "Source: HiKorea etc. For reference — final quote confirmed by your attorney & agent.",
     startBtn: "Start my application", otherBtn: "See other visas", free: "Free",
     freeReply: "Thanks for your message! In this demo, the consultation proceeds via the buttons.\nIn the full service, the AI understands free text and answers with HiKorea sources. 😊",
+    otpTitle: "Sign in with email code",
+    otpDesc: "If Google isn't available in your region (e.g. mainland China), sign in with an email verification code.",
+    otpEmailPh: "Enter your email address",
+    otpSend: "Send code", otpSent: "Code sent — check your inbox (and spam). Valid for 10 minutes.",
+    otpCodePh: "Enter the 6-digit code",
+    otpVerify: "Verify & sign in",
+    otpFail: "The code is incorrect or expired. Please try again.",
+    otpSendFail: "Failed to send. Please try again shortly.",
+    orDivider: "or",
+  },
+  zh: {
+    tabHome: "首页", tabChat: "咨询", tabDocs: "材料", tabStatus: "进度", tabMy: "我的",
+    langLabel: "中文",
+    aiDisclaimer: "AI咨询基于HiKorea公开信息，仅供参考。最终审核由负责律师·行政士进行。",
+    heroTitle: "韩国签证，聊天即可\n从申请到递交一站搞定",
+    heroDesc: "与AI聊天即可获得签证类型推荐、材料准备指导，由持牌律师·行政士代为递交 — 如被拒签，还可直接代理申诉程序。",
+    heroCta: "开始AI咨询",
+    quickMenu: "快捷菜单",
+    qVisaInfo: "签证信息", qDocs: "提交材料", qStatus: "办理进度", qExpert: "专家咨询",
+    ongoing: "进行中的申请", inProgress: "进行中", noCase: "暂无进行中的申请。从AI咨询开始吧！",
+    popular: "热门签证", viewAll: "查看全部签证",
+    homeDisclaimer: "本服务的指引基于HiKorea(hikorea.go.kr)公开信息，最终审批结果以韩国出入境·外国人厅的决定为准。",
+    chatTitle: "AI签证咨询", chatPlaceholder: "请输入消息…",
+    visasTitle: "签证信息", searchPh: "按签证代码或关键词搜索（例：E-7、留学）",
+    catAll: "全部", catStudy: "留学·研修", catWork: "就业",
+    askAi: "不确定？问问AI哪种签证适合您",
+    visasDisclaimer: "来源：HiKorea(hikorea.go.kr)等公开信息 · 实际条件·材料因国籍/学校/职种/管辖而异，最终由负责律师·行政士确认。",
+    updatedAt: "基准日", detailOpen: "查看业务·材料·费用 ▾", detailClose: "收起 ▴",
+    agencyFee: "代办服务费", govFee: "政府规费", govFeeAtCost: "政府规费（实费）",
+    total: "预计总额（不含增值税）", duration: "预计办理时间",
+    reqTitle: "条件", reqTitleKey: "主要条件", docsTitle: "材料（通用材料另计）",
+    noResult: "没有搜索结果。F-2·F-6等其他签证请通过AI咨询了解。",
+    processing: "办理",
+    docsPageTitle: "提交材料",
+    docsAutoNote: "此清单由AI咨询结果自动生成。拍照或上传文件后，负责律师·行政士将进行审核。",
+    askDocs: "咨询材料问题", submitDone: "提交完成",
+    docsDisclaimer: "上传的材料将加密存储，仅用于代办业务。",
+    submitted: "已提交", checklist: "材料清单", issuer: "签发机构",
+    stNone: "未提交", stUploaded: "待审核", stApproved: "已通过", stRejected: "被退回 — 请重新上传",
+    actUpload: "上传", actReupload: "重新上传", actView: "查看",
+    upFailSize: "文件过大（最大4MB）。请压缩图片后重新上传。",
+    upFailType: "仅支持PDF或图片文件（jpg·png·webp·heic）。",
+    upFail: "上传失败，请稍后重试。",
+    uploading: "上传中…",
+    aiTyping: "AI正在回复…",
+    guestGateChat: "免费体验咨询到此为止。登录后可继续当前对话，并进行案件保存和材料上传。",
+    guestGatePlaceholder: "登录后可继续咨询",
+    guestGateBtn: "登录并继续咨询",
+    guestDocsTitle: "登录后可使用材料清单",
+    guestStatusTitle: "登录后可查看办理进度",
+    guestGateSub: "几秒即可开始。您的咨询·申请记录将安全关联到您的账号。",
+    statusTitle: "办理进度", stepsTitle: "办理阶段", applyNo: "受理编号",
+    msgThreadTitle: "与负责人的消息",
+    msgEmptyThread: "暂无消息。如有疑问请留言，负责律师·行政士会回复您。",
+    msgSendBtn: "发送", msgPlaceholder: "给负责人留言…",
+    msgAgentLabel: "负责人", msgMeLabel: "我",
+    agentName: "负责律师·行政士", agentDesc: "出入境专业 · 如被拒签可直接代理异议申请·行政诉讼",
+    msgBtn: "消息", supplement: "补充提交材料",
+    statusDisclaimer: "审批所需时间视韩国出入境·外国人厅情况而定。",
+    myTitle: "我的页面",
+    mMyCases: "我的申请记录", mMyDocs: "已提交材料", mPayments: "付款记录",
+    mLang: "语言设置", mNoti: "通知设置",
+    mPrivacy: "个人信息处理方针", mTerms: "服务条款", mOffice: "事务所信息（律师·行政士）", mLogout: "退出登录",
+    myDisclaimer: "K-Visa Assist是由律师·行政士事务所直接运营的出入境事务代办服务。",
+    loginTitle: "登录", loginDesc: "无需单独注册，即刻开始。",
+    loginGoogle: "使用Google继续",
+    loginNote: "登录后，申请进度和材料将安全关联到您的账号。",
+    loginRequired: "开始申请需要先登录。",
+    logout: "退出登录", myAccount: "我的账号", guest: "访客",
+    loginCta: "登录",
+    recoBadge: "推荐", basis: "基准日",
+    basisNote: "来源：HiKorea等（仅供参考，最终报价由负责律师·行政士确认）",
+    startBtn: "开始申请", otherBtn: "查看其他签证", free: "免费",
+    freeReply: "感谢您的留言！演示版通过按钮进行咨询。\n正式服务中AI可理解自由输入并基于HiKorea信息回答。",
+    otpTitle: "邮箱验证码登录",
+    otpDesc: "Google在部分地区（如中国大陆）无法使用时，请用邮箱验证码登录。",
+    otpEmailPh: "请输入邮箱（如QQ邮箱·163邮箱均可）",
+    otpSend: "发送验证码", otpSent: "验证码已发送，请查收邮件（含垃圾箱）。10分钟内有效。",
+    otpCodePh: "请输入6位验证码",
+    otpVerify: "验证并登录",
+    otpFail: "验证码不正确或已过期，请重试。",
+    otpSendFail: "发送失败，请稍后重试。",
+    orDivider: "或",
   },
 } as const;
 
@@ -157,7 +249,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("kva_lang") as Lang | null;
-    if (saved === "ko" || saved === "en") setLangState(saved);
+    if (saved === "ko" || saved === "en" || saved === "zh") setLangState(saved);
     setReady(true);
   }, []);
 
@@ -170,7 +262,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     lang,
     setLang,
     ui: (key) => UI_DICT[lang][key] ?? UI_DICT.ko[key] ?? key,
-    t: (v) => v[lang] ?? v.ko,
+    t: (v) => v[lang] ?? v.en ?? v.ko,
     won: (n) => (n === 0 ? UI_DICT[lang].free : lang === "ko" ? n.toLocaleString("ko-KR") + "원" : "₩" + n.toLocaleString("en-US")),
   };
 
